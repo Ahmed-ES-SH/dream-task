@@ -28,6 +28,8 @@ type PathValue<T, P extends string> =
       ? T[P]
       : never;
 
+export type { PathValue };
+
 // ==============================
 // Safe Getter
 // ==============================

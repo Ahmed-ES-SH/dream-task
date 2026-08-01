@@ -36,7 +36,7 @@ export default function LoginForm() {
       <div className="space-y-2">
         <Label
           htmlFor="email"
-          className="text-xs font-medium tracking-wider text-primary-foreground/60 uppercase"
+          className="text-xs font-medium tracking-wider text-gateway-muted uppercase"
         >
           {t("login.emailLabel")}
         </Label>
@@ -45,7 +45,7 @@ export default function LoginForm() {
           type="email"
           autoComplete="email"
           placeholder="user@example.com"
-          className="h-11 rounded-none border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground caret-primary-foreground placeholder:text-primary-foreground/40 focus-visible:border-primary-foreground/60 focus-visible:ring-0 dark:bg-primary-foreground/5"
+          className="h-11 rounded-none border-gateway-border bg-gateway-fg/5 text-gateway-fg caret-gateway-fg placeholder:text-gateway-fg/40 focus-visible:border-gateway-fg/60 focus-visible:ring-0"
           aria-invalid={errors.email ? true : undefined}
           {...register("email")}
         />
@@ -57,7 +57,7 @@ export default function LoginForm() {
       <div className="space-y-2">
         <Label
           htmlFor="password"
-          className="text-xs font-medium tracking-wider text-primary-foreground/60 uppercase"
+          className="text-xs font-medium tracking-wider text-gateway-muted uppercase"
         >
           {t("login.passwordLabel")}
         </Label>
@@ -67,14 +67,14 @@ export default function LoginForm() {
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             placeholder="••••••••"
-            className="h-11 rounded-none border-primary-foreground/20 bg-primary-foreground/5 pe-10 text-primary-foreground caret-primary-foreground placeholder:text-primary-foreground/40 focus-visible:border-primary-foreground/60 focus-visible:ring-0 dark:bg-primary-foreground/5"
+            className="h-11 rounded-none border-gateway-border bg-gateway-fg/5 pe-10 text-gateway-fg caret-gateway-fg placeholder:text-gateway-fg/40 focus-visible:border-gateway-fg/60 focus-visible:ring-0"
             aria-invalid={errors.password ? true : undefined}
             {...register("password")}
           />
           <button
             type="button"
             onClick={togglePassword}
-            className="absolute inset-y-0 end-0 flex items-center pe-3 text-primary-foreground/50 transition-colors hover:text-primary-foreground"
+            className="absolute inset-y-0 end-0 flex items-center pe-3 text-gateway-muted transition-colors hover:text-gateway-fg"
             aria-label={
               showPassword ? t("login.hidePassword") : t("login.showPassword")
             }
@@ -94,7 +94,7 @@ export default function LoginForm() {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="h-11 w-full rounded-none bg-primary-foreground text-base font-semibold tracking-wide text-primary transition-colors hover:bg-primary-foreground/90"
+        className="h-11 w-full rounded-none bg-gateway-fg text-base font-semibold tracking-wide text-gateway transition-colors hover:bg-gateway-fg/90"
       >
         {isSubmitting && <Loader2 className="animate-spin" />}
         {isSubmitting ? t("login.signingIn") : t("login.submit")}
