@@ -15,12 +15,12 @@
     }
   },
   "navbar": {
-    "brand": "FlickHQ",
+    "brand": "Dream",
     "login": "ورود",
     "dashboard": "داشبورد"
   },
   "footer": {
-    "copyright": "© 2026 FlickHQ"
+    "copyright": "© 2026 Dream"
   },
   "home": {
     "title": "خانه"
@@ -44,7 +44,6 @@
     "passwordMin": "رمز عبور باید حداقل ۶ کاراکتر باشد",
     "showPassword": "نمایش رمز عبور",
     "hidePassword": "پنهان کردن رمز عبور",
-    "demoHint": "اطلاعات آزمایشی: demo@example.com / demo1234",
     "noAccount": "حساب کاربری ندارید؟",
     "createOne": "یکی بسازید"
   },

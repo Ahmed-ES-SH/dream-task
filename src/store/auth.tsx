@@ -16,6 +16,7 @@ import {
   logoutRequest,
   setAccessToken,
 } from "@/lib/api";
+import { queryClient } from "@/lib/queryClient";
 import type { LoginRequest } from "@/types/auth";
 
 type AuthContextValue = {
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // The session is considered ended client-side regardless of the server response.
     } finally {
       clearAccessToken();
+      queryClient.removeQueries({ queryKey: ["profile"] });
       setIsAuthenticated(false);
     }
   }, []);
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onUnauthorized = () => {
       clearAccessToken();
+      queryClient.removeQueries({ queryKey: ["profile"] });
       setIsAuthenticated(false);
     };
 

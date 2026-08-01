@@ -9,16 +9,12 @@ import {
 } from "@/types/auth";
 import { normalizeUser, type User } from "@/types/user";
 
-import { mockLogin, mockLogout, mockProfile } from "./mock-api";
 import { pickString, type Payload } from "./payload";
 
 export const TOKEN_STORAGE_KEY = "access_token";
 export const AUTH_UNAUTHORIZED_EVENT = "auth:unauthorized";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL as string | undefined;
-
-export const isMockMode =
-  !baseURL || import.meta.env.VITE_MOCK_API === "true";
 
 export function getAccessToken(): string | null {
   return localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -80,21 +76,15 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 export async function loginRequest(
   credentials: LoginRequest,
 ): Promise<LoginResponse> {
-  if (isMockMode) return mockLogin(credentials);
-
   const response = await apiClient.post(AUTH_API.LOGIN, credentials);
   return normalizeLoginResponse(response.data);
 }
 
 export async function logoutRequest(): Promise<void> {
-  if (isMockMode) return mockLogout();
-
   await apiClient.post(AUTH_API.LOGOUT);
 }
 
 export async function profileRequest(): Promise<User> {
-  if (isMockMode) return mockProfile();
-
   const response = await apiClient.get(PROFILE_API.GET_PROFILE);
   return normalizeUser(response.data);
 }
