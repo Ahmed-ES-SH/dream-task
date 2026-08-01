@@ -1,4 +1,7 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
+import axios, {
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
 import { AUTH_API } from "@/constants/auth.api";
 import { PROFILE_API } from "@/constants/profile.api";
@@ -21,7 +24,8 @@ export const REFRESH_TOKEN_STORAGE_KEY = "refresh_token";
 export const AUTH_UNAUTHORIZED_EVENT = "auth:unauthorized";
 
 // Base URL of the backend API, read from VITE_API_BASE_URL (see .env.example).
-const baseURL = import.meta.env.VITE_API_BASE_URL as string | undefined;
+// const baseURL = import.meta.env.VITE_API_BASE_URL as string | undefined;
+const baseURL = "/api" as string | undefined;
 
 // ---- Token helpers -----------------------------------------------------
 
