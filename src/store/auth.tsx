@@ -10,11 +10,12 @@ import {
 
 import {
   AUTH_UNAUTHORIZED_EVENT,
-  clearAccessToken,
+  clearAuthTokens,
   getAccessToken,
   loginRequest,
   logoutRequest,
   setAccessToken,
+  setRefreshToken,
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import type { LoginRequest } from "@/types/auth";
@@ -35,6 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (credentials: LoginRequest) => {
     const response = await loginRequest(credentials);
     setAccessToken(response.accessToken);
+
+    if (response.refreshToken) {
+      setRefreshToken(response.refreshToken);
+    }
+
     setIsAuthenticated(true);
   }, []);
 
@@ -44,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // The session is considered ended client-side regardless of the server response.
     } finally {
-      clearAccessToken();
+      clearAuthTokens();
       queryClient.removeQueries({ queryKey: ["profile"] });
       setIsAuthenticated(false);
     }
@@ -52,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onUnauthorized = () => {
-      clearAccessToken();
+      clearAuthTokens();
       queryClient.removeQueries({ queryKey: ["profile"] });
       setIsAuthenticated(false);
     };
