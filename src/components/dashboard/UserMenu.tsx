@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -84,10 +85,12 @@ export default function UserMenu({ variant = "full" }: UserMenuProps) {
       />
 
       <DropdownMenuContent align="end" className="min-w-52">
-        <DropdownMenuLabel className="font-normal">
-          <p className="truncate text-sm font-medium">{displayName}</p>
-          <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal">
+            <p className="truncate text-sm font-medium">{displayName}</p>
+            <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 
