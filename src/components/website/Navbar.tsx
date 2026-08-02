@@ -15,6 +15,7 @@ import {
 } from "../ui/dropdown-menu";
 import { useTranslations } from "../../hooks/useTranslations";
 import { useLocale, type LocaleType } from "../../hooks/useLocale";
+import ThemeToggle from "../theme/ThemeToggle";
 import LocaleLink from "./LocaleLink";
 
 const LOCALES: LocaleType[] = ["en", "ar", "fa"];
@@ -52,6 +53,10 @@ export default function Navbar() {
               >
                 {t("navbar.dashboard")}
               </Button>
+            </NavigationMenuItem>
+
+            <NavigationMenuItem>
+              <ThemeToggle />
             </NavigationMenuItem>
 
             <NavigationMenuItem>

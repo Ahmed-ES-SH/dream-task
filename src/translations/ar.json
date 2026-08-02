@@ -15,12 +15,12 @@
     }
   },
   "navbar": {
-    "brand": "FlickHQ",
+    "brand": "Dream",
     "login": "تسجيل الدخول",
     "dashboard": "لوحة التحكم"
   },
   "footer": {
-    "copyright": "© 2026 FlickHQ"
+    "copyright": "© 2026 Dream"
   },
   "home": {
     "title": "الرئيسية"
@@ -44,7 +44,6 @@
     "passwordMin": "يجب ألا تقل كلمة المرور عن 6 أحرف",
     "showPassword": "إظهار كلمة المرور",
     "hidePassword": "إخفاء كلمة المرور",
-    "demoHint": "بيانات التجربة: demo@example.com / demo1234",
     "noAccount": "ليس لديك حساب؟",
     "createOne": "أنشئ واحداً"
   },

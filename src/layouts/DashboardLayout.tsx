@@ -24,7 +24,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <aside className="fixed inset-y-0 start-0 z-40 hidden w-64 flex-col border-e bg-card lg:flex">
+      <aside className="fixed inset-y-0 inset-s-0 z-40 hidden w-64 flex-col border-e bg-card lg:flex">
         <div className="flex h-16 items-center justify-between border-b px-4">
           <LocaleLink to="/dashboard" className="text-lg font-bold">
             {t("navbar.brand")}
