@@ -1,3 +1,4 @@
+import MfaSecurityCard from "@/components/mfa/SecurityCard";
 import { useTranslations } from "@/hooks/useTranslations";
 
 export default function Settings() {
@@ -11,12 +12,7 @@ export default function Settings() {
         </h1>
       </header>
 
-      <section className="rounded-lg border bg-card p-6">
-        <h2 className="text-lg font-semibold">{t("settings.securityTitle")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("settings.securityDescription")}
-        </p>
-      </section>
+      <MfaSecurityCard />
     </div>
   );
 }

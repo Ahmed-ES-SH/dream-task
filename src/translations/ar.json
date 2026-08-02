@@ -112,6 +112,25 @@
     "rateLimited": "محاولات كثيرة. يرجى المحاولة مرة أخرى لاحقاً.",
     "verify": "تحقق",
     "verifying": "جارٍ التحقق…",
-    "back": "رجوع"
+    "back": "رجوع",
+    "statusEnabled": "مُفعّل",
+    "statusDisabled": "معطّل",
+    "statusUnknown": "غير معروف",
+    "enableMfa": "تفعيل المصادقة الثنائية",
+    "disableMfa": "تعطيل المصادقة الثنائية",
+    "statusDescriptionEnabled": "المصادقة الثنائية مفعّلة على حسابك.",
+    "statusDescriptionDisabled": "المصادقة الثنائية غير مفعّلة على حسابك.",
+    "statusDescriptionUnknown": "حالة المصادقة الثنائية غير متاحة حالياً.",
+    "setupTitle": "إعداد المصادقة الثنائية",
+    "setupLoading": "جارٍ تجهيز إعدادات المصادقة…",
+    "setupFailed": "تعذّر تجهيز إعدادات المصادقة. حاول مرة أخرى.",
+    "setupRetry": "حاول مرة أخرى",
+    "alreadyEnabled": "المصادقة الثنائية مفعّلة بالفعل",
+    "scannedQr": "لقد مسحتُ رمز QR",
+    "copySecret": "نسخ",
+    "copied": "تم النسخ ✓",
+    "secretLabel": "مفتاح الإدخال اليدوي",
+    "secretWarning": "إذا فقدت هذا الرمز فلن تتمكن من تسجيل الدخول.",
+    "qrAlt": "رمز QR لتطبيق المصادقة — أو استخدم الرمز اليدوي أدناه"
   }
 }
