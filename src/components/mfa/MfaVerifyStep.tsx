@@ -186,7 +186,7 @@ export default function MfaVerifyStep({
           onClick={onBack}
           className="w-full text-muted-foreground hover:text-foreground"
         >
-          {t("mfa.back")}
+          {t("mfa.verifyBack")}
         </Button>
       )}
     </form>

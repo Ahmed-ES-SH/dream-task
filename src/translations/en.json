@@ -8,6 +8,7 @@
     "language": "Language",
     "logout": "Log out",
     "retry": "Retry",
+    "close": "Close",
     "languages": {
       "en": "English",
       "ar": "العربية",
@@ -66,6 +67,7 @@
     "createOne": "Create one",
     "mfaTitle": "Two-factor authentication",
     "mfaDescription": "Enter the 6-digit code from your authenticator app",
+    "mfaStayOnPage": "Keep this tab open — a refresh will restart sign-in",
     "mfaNotYou": "Not you?"
   },
   "register": {
@@ -109,15 +111,21 @@
     "codeLabel": "Authentication code",
     "codeInvalid": "Enter the 6-digit code",
     "codeExpired": "Code expired — enter the new code",
+    "passwordInvalid": "Incorrect password",
+    "accessDenied": "Access denied — please sign in again",
     "rateLimited": "Too many attempts. Please try again later.",
     "verify": "Verify",
     "verifying": "Verifying…",
-    "back": "Back",
+    "verifyBack": "Back",
     "statusEnabled": "Enabled",
     "statusDisabled": "Disabled",
     "statusUnknown": "Unknown",
     "enableMfa": "Enable MFA",
     "disableMfa": "Disable MFA",
+    "disableTitle": "Disable two-factor authentication",
+    "disableWarning": "Disabling removes the extra security layer from your account.",
+    "disableSubmit": "Disable MFA",
+    "disabledToast": "Two-factor authentication disabled",
     "statusDescriptionEnabled": "Two-factor authentication is active on your account.",
     "statusDescriptionDisabled": "Two-factor authentication is not enabled on your account.",
     "statusDescriptionUnknown": "Two-factor authentication status is not available right now.",
@@ -126,11 +134,16 @@
     "setupFailed": "We couldn't prepare your authenticator setup. Please try again.",
     "setupRetry": "Try again",
     "alreadyEnabled": "MFA is already enabled",
+    "alreadyDisabled": "MFA is already disabled",
     "scannedQr": "I've scanned the QR",
     "copySecret": "Copy",
     "copied": "Copied ✓",
     "secretLabel": "Manual entry key",
     "secretWarning": "If you lose this code you cannot sign in.",
-    "qrAlt": "QR code for your authenticator app — or use the manual secret below"
+    "qrAlt": "QR code for your authenticator app — or use the manual secret below",
+    "successTitle": "Two-factor authentication enabled",
+    "successDescription": "Your account is now protected with an extra sign-in step.",
+    "successDone": "Done",
+    "enabledToast": "Two-factor authentication enabled"
   }
 }

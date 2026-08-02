@@ -2,6 +2,7 @@ import * as React from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 
+import { useTranslations } from "@/hooks/useTranslations";
 import { cn } from "@/lib/utils";
 
 function Dialog(props: DialogPrimitive.Root.Props) {
@@ -78,10 +79,12 @@ function DialogCloseButton({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  const t = useTranslations();
+
   return (
     <DialogPrimitive.Close
       data-slot="dialog-close-button"
-      aria-label="Close"
+      aria-label={t("common.close")}
       className={cn(
         "absolute top-4 right-4 flex size-7 items-center justify-center rounded-md text-muted-foreground outline-hidden transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 hover:bg-muted hover:text-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className

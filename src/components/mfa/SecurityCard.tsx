@@ -1,18 +1,21 @@
 import { useState } from "react";
 
 import MfaDisableButton from "@/components/mfa/MfaDisableButton";
+import MfaDisableModal from "@/components/mfa/MfaDisableModal";
 import MfaSetupButton from "@/components/mfa/MfaSetupButton";
 import MfaSetupModal from "@/components/mfa/MfaSetupModal";
 import MfaStatusBadge, {
   type MfaStatus,
 } from "@/components/mfa/MfaStatusBadge";
+import { toast } from "@/components/ui/toast";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslations } from "@/hooks/useTranslations";
+import { queryClient } from "@/lib/queryClient";
 
 // Security section card (spec §6.2, §8.1). Status is derived only from the
 // profile response's MFA fields (`mfa.enabled`) — no invented endpoints.
 // `mfaEnabled` is `null` (= `unknown`) when the profile exposes no MFA fields,
-// and flips locally after successful enable/disable mutations (Phases 9/11).
+// and flips locally after successful enable/disable mutations (Phases 10/11).
 export default function MfaSecurityCard() {
   const t = useTranslations();
   const { data: profile } = useProfile();
@@ -36,6 +39,7 @@ export default function MfaSecurityCard() {
     setMfaEnabled(profileMfaEnabled);
   }
 
+  // Status is `null` (= `unknown`) when the profile exposes no MFA fields.
   const status: MfaStatus =
     mfaEnabled === null ? "unknown" : mfaEnabled ? "enabled" : "disabled";
 
@@ -43,6 +47,22 @@ export default function MfaSecurityCard() {
   // disabled → only "Enable MFA" (spec §6.2).
   const showSetupButton = mfaEnabled !== true;
   const showDisableButton = mfaEnabled !== false;
+
+  // Enable wizard finished: flip the card, toast, and refetch the profile —
+  // harmless if the profile carries no MFA fields (spec §8.1, §6.2).
+  const handleEnabled = () => {
+    setMfaEnabled(true);
+    queryClient.invalidateQueries({ queryKey: ["profile"] });
+    toast.success(t("mfa.enabledToast"));
+  };
+
+  // Disable confirmation finished (200) or MFA was already disabled (404,
+  // finished in another tab): flip the card and refetch the profile (§8.1).
+  // The modal owns the success/already-disabled toasts (§7.2).
+  const handleDisabled = () => {
+    setMfaEnabled(false);
+    queryClient.invalidateQueries({ queryKey: ["profile"] });
+  };
 
   const statusDescription =
     status === "enabled"
@@ -88,6 +108,15 @@ export default function MfaSecurityCard() {
         open={setupOpen}
         onOpenChange={setSetupOpen}
         onAlreadyEnabled={() => setMfaEnabled(true)}
+        onEnabled={handleEnabled}
+      />
+
+      {/* Disable confirmation: success or 404 (already disabled elsewhere)
+          flips the card straight to disabled (§13). */}
+      <MfaDisableModal
+        open={disableOpen}
+        onOpenChange={setDisableOpen}
+        onDisabled={handleDisabled}
       />
     </section>
   );

@@ -34,6 +34,9 @@ export default function AuthMfaVerifyStep({
         <p className="mt-2 text-sm text-gateway-muted">
           {t("login.mfaDescription")}
         </p>
+        <p className="mt-1 text-xs text-gateway-muted/70">
+          {t("login.mfaStayOnPage")}
+        </p>
       </div>
 
       <p className="text-sm text-gateway-muted">

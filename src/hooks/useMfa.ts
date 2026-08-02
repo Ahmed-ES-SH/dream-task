@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { mfaSetupRequest, mfaVerifyRequest } from "@/lib/api";
+import { mfaDisableRequest, mfaSetupRequest, mfaVerifyRequest } from "@/lib/api";
 
 // Setup mutation for the enable wizard (spec §9.1): `mutationFn` only — the
 // modal owns the returned data. Re-invoked on every open (Q4 default: the
@@ -16,5 +16,13 @@ export function useMfaSetup() {
 export function useMfaVerify() {
   return useMutation({
     mutationFn: mfaVerifyRequest,
+  });
+}
+
+// Disable mutation for the confirmation dialog (spec §9.1): `mutationFn`
+// only — the modal owns success/error handling per status code (§13).
+export function useMfaDisable() {
+  return useMutation({
+    mutationFn: mfaDisableRequest,
   });
 }
