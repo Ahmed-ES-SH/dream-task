@@ -92,10 +92,11 @@ function isAuthPage(): boolean {
 // axios' config type has no slot for our retry marker, so extend it locally.
 type RetryableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
 
-// Custom flag set on login-context mfa/verify calls; a 401 there means the
-// challenge expired, not that the session is invalid, so the interceptor must
-// skip the refresh flow for them.
-type VerifyConfig = AxiosRequestConfig & { _skipRefresh: true };
+// Custom flag set on calls whose 401 has business meaning, not session
+// expiry: login-context mfa/verify (challenge expired, §11.5) and
+// mfa/disable (wrong password, §13). The interceptor must skip the refresh
+// flow for them.
+type SkipRefreshConfig = AxiosRequestConfig & { _skipRefresh: true };
 
 // ---- Single-flight token refresh --------------------------------------
 // Only one refresh request runs at a time; concurrent 401s are queued and all
@@ -187,20 +188,19 @@ apiClient.interceptors.response.use(
 
     // Never refresh for the endpoints/pages that are allowed to 401:
     // bad credentials, anonymous pages, the refresh call itself, and
-    // login-context mfa/verify (where a 401 means the challenge expired,
-    // not that the session is invalid).
+    // requests flagged `_skipRefresh` (business-level 401s like a wrong
+    // password on mfa/disable or an expired login challenge).
     const isAuthRequest =
       url?.includes("/auth/login") || url?.includes("/auth/register");
-    const isLoginMfaVerify =
-      url?.includes("/auth/mfa/verify") &&
-      (config as RetryableConfig & { _skipRefresh?: boolean })._skipRefresh ===
-        true;
+    const isSkipRefreshRequest =
+      (config as RetryableConfig & { _skipRefresh?: boolean })
+        ._skipRefresh === true;
 
     if (
       isAuthRequest ||
       isAuthPage() ||
       url?.includes("/auth/refresh") ||
-      isLoginMfaVerify
+      isSkipRefreshRequest
     ) {
       return Promise.reject(error);
     }
@@ -363,7 +363,7 @@ export async function mfaVerifyRequest(
   if (body.context === "login") {
     // A 401 here means the challenge expired, not that the session is
     // invalid, so the refresh flow must be skipped (see the interceptor).
-    const config: VerifyConfig = { _skipRefresh: true };
+    const config: SkipRefreshConfig = { _skipRefresh: true };
     const response = await apiClient.post(AUTH_API.MFA_VERIFY, body, config);
     return normalizeLoginVerify(response.data);
   }
@@ -376,5 +376,9 @@ export async function mfaDisableRequest(body: {
   password: string;
   code: string;
 }): Promise<void> {
-  await apiClient.post(AUTH_API.MFA_DISABLE, body);
+  // A 401 here means the password is wrong, not that the session is
+  // invalid — the refresh flow must be skipped or a mistyped password
+  // would bounce the retry into a second 401 and kill the session (§13).
+  const config: SkipRefreshConfig = { _skipRefresh: true };
+  await apiClient.post(AUTH_API.MFA_DISABLE, body, config);
 }
