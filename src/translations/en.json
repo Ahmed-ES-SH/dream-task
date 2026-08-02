@@ -112,6 +112,25 @@
     "rateLimited": "Too many attempts. Please try again later.",
     "verify": "Verify",
     "verifying": "Verifying…",
-    "back": "Back"
+    "back": "Back",
+    "statusEnabled": "Enabled",
+    "statusDisabled": "Disabled",
+    "statusUnknown": "Unknown",
+    "enableMfa": "Enable MFA",
+    "disableMfa": "Disable MFA",
+    "statusDescriptionEnabled": "Two-factor authentication is active on your account.",
+    "statusDescriptionDisabled": "Two-factor authentication is not enabled on your account.",
+    "statusDescriptionUnknown": "Two-factor authentication status is not available right now.",
+    "setupTitle": "Set up two-factor authentication",
+    "setupLoading": "Preparing your authenticator setup…",
+    "setupFailed": "We couldn't prepare your authenticator setup. Please try again.",
+    "setupRetry": "Try again",
+    "alreadyEnabled": "MFA is already enabled",
+    "scannedQr": "I've scanned the QR",
+    "copySecret": "Copy",
+    "copied": "Copied ✓",
+    "secretLabel": "Manual entry key",
+    "secretWarning": "If you lose this code you cannot sign in.",
+    "qrAlt": "QR code for your authenticator app — or use the manual secret below"
   }
 }
