@@ -48,6 +48,15 @@
     "securityTitle": "Security",
     "securityDescription": "Security settings"
   },
+  "errors": {
+    "unauthorized": "Incorrect email or password. Please check your credentials and try again.",
+    "mfaCodeInvalid": "The code you entered is incorrect. Please try again.",
+    "accountInactive": "Your account is inactive. Please contact support to restore access.",
+    "licenseDenied": "Access blocked — your license status does not permit signing in.",
+    "throttled": "Too many attempts. Please wait a moment and try again.",
+    "licenseCheckFailed": "The license service is unavailable right now. Please try again later.",
+    "accessDenied": "Access denied — please sign in again"
+  },
   "login": {
     "title": "Welcome back",
     "description": "Sign in to your account to continue.",
@@ -87,6 +96,10 @@
     "status": "Account status",
     "memberSince": "Member since",
     "lastLogin": "Last login",
+    "mobile": "Mobile",
+    "timezone": "Timezone",
+    "locale": "Locale",
+    "editAvatar": "Set profile picture",
     "roles": {
       "admin": "Administrator",
       "manager": "Manager",
@@ -120,6 +133,7 @@
     "statusEnabled": "Enabled",
     "statusDisabled": "Disabled",
     "statusUnknown": "Unknown",
+    "statusChecking": "Checking your two-factor authentication status…",
     "enableMfa": "Enable MFA",
     "disableMfa": "Disable MFA",
     "disableTitle": "Disable two-factor authentication",
@@ -129,6 +143,11 @@
     "statusDescriptionEnabled": "Two-factor authentication is active on your account.",
     "statusDescriptionDisabled": "Two-factor authentication is not enabled on your account.",
     "statusDescriptionUnknown": "Two-factor authentication status is not available right now.",
+    "statusCheckFailed": "We couldn't check your two-factor authentication status right now. Please try again.",
+    "enablePromptTitle": "Enable two-factor authentication",
+    "enablePromptDescription": "Two-factor authentication is not enabled on your account. You must enable it to access the dashboard.",
+    "enableLater": "Not now",
+    "enableRequired": "You must enable two-factor authentication to access your panel.",
     "setupTitle": "Set up two-factor authentication",
     "setupLoading": "Preparing your authenticator setup…",
     "setupFailed": "We couldn't prepare your authenticator setup. Please try again.",

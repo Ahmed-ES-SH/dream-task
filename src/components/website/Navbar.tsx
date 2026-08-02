@@ -20,6 +20,7 @@ import {
 } from "../ui/dropdown-menu";
 import { useTranslations } from "../../hooks/useTranslations";
 import { useLocale, type LocaleType } from "../../hooks/useLocale";
+import { useAuth } from "../../store/auth";
 import ThemeToggle from "../theme/ThemeToggle";
 import LocaleLink from "./LocaleLink";
 
@@ -29,6 +30,7 @@ export default function Navbar() {
   const t = useTranslations();
   const locale = useLocale() ?? "en";
   const { pathname } = useLocation();
+  const { isAuthenticated } = useAuth();
 
   const currentPath = pathname.replace(/^\/(en|ar|fa)/, "");
 
@@ -41,26 +43,28 @@ export default function Navbar() {
 
         <NavigationMenu>
           <NavigationMenuList className="gap-0.5 sm:gap-1">
-            <NavigationMenuItem>
-              <Button
-                variant="ghost"
-                size="icon"
-                nativeButton={false}
-                render={<LocaleLink to="/login" />}
-                aria-label={t("navbar.login")}
-                className="sm:hidden"
-              >
-                <LogInIcon className="rtl:-scale-x-100" />
-              </Button>
-              <Button
-                variant="ghost"
-                nativeButton={false}
-                render={<LocaleLink to="/login" />}
-                className="hidden sm:inline-flex"
-              >
-                {t("navbar.login")}
-              </Button>
-            </NavigationMenuItem>
+            {!isAuthenticated && (
+              <NavigationMenuItem>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  nativeButton={false}
+                  render={<LocaleLink to="/login" />}
+                  aria-label={t("navbar.login")}
+                  className="sm:hidden"
+                >
+                  <LogInIcon className="rtl:-scale-x-100" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  nativeButton={false}
+                  render={<LocaleLink to="/login" />}
+                  className="hidden sm:inline-flex"
+                >
+                  {t("navbar.login")}
+                </Button>
+              </NavigationMenuItem>
+            )}
 
             <NavigationMenuItem>
               <Button

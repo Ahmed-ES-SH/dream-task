@@ -1,19 +1,18 @@
 import { z } from "zod";
 
-import type { useTranslations } from "@/hooks/useTranslations";
-
-export type Translator = ReturnType<typeof useTranslations>;
-
-export function createLoginSchema(t: Translator) {
+// Messages are translation keys (not translated text): they are resolved at
+// render time via `t(...)`, so field errors stay in sync when the user
+// switches language while an error is visible.
+export function createLoginSchema() {
   return z.object({
     email: z
       .string()
-      .min(1, t("login.emailRequired"))
-      .email(t("login.emailInvalid")),
+      .min(1, "login.emailRequired")
+      .email("login.emailInvalid"),
     password: z
       .string()
-      .min(1, t("login.passwordRequired"))
-      .min(6, t("login.passwordMin"))
+      .min(1, "login.passwordRequired")
+      .min(6, "login.passwordMin")
       .max(72),
   });
 }

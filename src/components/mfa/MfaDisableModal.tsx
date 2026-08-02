@@ -20,11 +20,13 @@ import { useMfaDisable } from "@/hooks/useMfa";
 import { useTranslations } from "@/hooks/useTranslations";
 import {
   AUTH_UNAUTHORIZED_EVENT,
+  getRetryAfterSeconds,
+} from "@/lib/api";
+import {
   getApiErrorCode,
   getApiErrorMessage,
   getApiErrorStatus,
-  getRetryAfterSeconds,
-} from "@/lib/api";
+} from "@/lib/apiErrors";
 import {
   createDisableMfaSchema,
   type DisableMfaFormValues,
@@ -122,23 +124,24 @@ export default function MfaDisableModal({
         const status = getApiErrorStatus(error);
         const code = getApiErrorCode(error);
 
-        if (status === 401) {
+        if (status === 401 && code !== "MFA_CODE_INVALID") {
           // Wrong password (§13): inline error on the password field, the OTP
           // clears, focus returns to the password, the dialog stays open.
           form.setError("password", {
-            message: getApiErrorMessage(error, t("mfa.passwordInvalid")),
+            message: t("mfa.passwordInvalid"),
           });
           form.setValue("code", "");
           form.setFocus("password");
           return;
         }
 
-        if (status === 422) {
-          // Invalid/expired code (§13): inline error on the code; OtpInput
-          // clears the cells and refocuses cell 0 on the error transition
-          // (§12.2). The password is never touched (§16 #11).
+        if (status === 401 || status === 422) {
+          // Invalid code (401 MFA_CODE_INVALID) or invalid/expired code (422,
+          // §13): inline error on the code field; OtpInput clears the cells
+          // and refocuses cell 0 on the error transition (§12.2). The
+          // password is never touched (§16 #11).
           form.setError("code", {
-            message: getApiErrorMessage(error, t("mfa.codeInvalid")),
+            message: getApiErrorMessage(error, t, "mfa.codeInvalid"),
           });
           return;
         }
@@ -153,16 +156,16 @@ export default function MfaDisableModal({
 
         if (status === 403) {
           // ACCESS_DENIED on a protected mutation: the account is likely
-          // locked — surface the message and end the session (§13).
-          setRequestError(getApiErrorMessage(error, t("mfa.accessDenied")));
+          // locked — surface the mapped message and end the session (§13).
+          setRequestError(getApiErrorMessage(error, t, "mfa.accessDenied"));
           window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
           return;
         }
 
         if (status === 429) {
-          // Rate limited: show the server message, and honor Retry-After
+          // Rate limited: show the mapped message, and honor Retry-After
           // by disabling the submit button until the window elapses (§12.3).
-          setRequestError(getApiErrorMessage(error, t("mfa.rateLimited")));
+          setRequestError(getApiErrorMessage(error, t, "mfa.rateLimited"));
 
           const seconds = getRetryAfterSeconds(error);
           if (seconds > 0) {
@@ -178,7 +181,7 @@ export default function MfaDisableModal({
         // Unexpected failure: surface it on the code field like the shared
         // verify step's generic branch.
         form.setError("code", {
-          message: getApiErrorMessage(error, t("mfa.codeInvalid")),
+          message: getApiErrorMessage(error, t, "mfa.codeInvalid"),
         });
       },
     });

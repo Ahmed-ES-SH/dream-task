@@ -2,6 +2,9 @@ import {
   AlertCircle,
   CalendarDays,
   Clock3,
+  Globe2,
+  Languages,
+  Phone,
   RefreshCw,
   UserRound,
 } from "lucide-react";
@@ -30,10 +33,17 @@ import { ROLE_LABEL_KEYS } from "@/constants/profile";
 import { useLocale } from "@/hooks/useLocale";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslations } from "@/hooks/useTranslations";
+import { cn } from "@/lib/utils";
 import { formatDate, getInitials } from "@/lib/format";
 import { labelFor } from "@/lib/profile";
 
-export default function UserProfileCard() {
+type UserProfileCardProps = {
+  onAvatarClick?: () => void;
+};
+
+export default function UserProfileCard({
+  onAvatarClick,
+}: UserProfileCardProps = {}) {
   const t = useTranslations();
   const locale = useLocale() ?? "en";
   const { data: user, isLoading, isError, refetch } = useProfile();
@@ -80,9 +90,23 @@ export default function UserProfileCard() {
           {user.avatarUrl && (
             <AvatarImage src={user.avatarUrl} alt={user.fullName} />
           )}
-          <AvatarFallback className="text-lg">
-            {getInitials(user.fullName)}
-          </AvatarFallback>
+          {user.avatarUrl || !onAvatarClick ? (
+            <AvatarFallback className="text-lg">
+              {getInitials(user.fullName)}
+            </AvatarFallback>
+          ) : (
+            <button
+              type="button"
+              onClick={onAvatarClick}
+              aria-label={t("profile.editAvatar")}
+              className={cn(
+                "inline-flex size-full items-center justify-center rounded-full bg-muted text-lg font-medium text-muted-foreground transition-colors",
+                "hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              )}
+            >
+              {getInitials(user.fullName)}
+            </button>
+          )}
         </Avatar>
 
         <div className="min-w-0">
@@ -118,6 +142,21 @@ export default function UserProfileCard() {
             label={t("profile.lastLogin")}
             value={formatDate(locale, user.lastLoginAt)}
             icon={Clock3}
+          />
+          <ProfileInfoItem
+            label={t("profile.mobile")}
+            value={user.mobile || "—"}
+            icon={Phone}
+          />
+          <ProfileInfoItem
+            label={t("profile.timezone")}
+            value={user.timezone || "—"}
+            icon={Globe2}
+          />
+          <ProfileInfoItem
+            label={t("profile.locale")}
+            value={user.locale || "—"}
+            icon={Languages}
           />
         </dl>
       </CardContent>

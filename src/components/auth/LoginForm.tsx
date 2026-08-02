@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLoginForm } from "@/hooks/useLoginForm";
 import { useTranslations } from "@/hooks/useTranslations";
+import type { StringKey } from "@/types/profile";
 
 type LoginFormProps = {
   loginForm: ReturnType<typeof useLoginForm>;
@@ -16,7 +17,7 @@ export default function LoginForm({ loginForm }: LoginFormProps) {
   const {
     register,
     formState: { errors, isSubmitting },
-    apiError,
+    apiErrorKey,
     showPassword,
     togglePassword,
     onSubmit,
@@ -24,15 +25,17 @@ export default function LoginForm({ loginForm }: LoginFormProps) {
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
-      {apiError && (
+      {apiErrorKey && (
         <Alert
           variant="destructive"
           className="rounded-none border-red-400/40 bg-red-500/15 text-red-300"
         >
           <CircleAlert />
-          <AlertTitle>{t("login.failedTitle")}</AlertTitle>
-          <AlertDescription className="!text-red-300/90">
-            {apiError}
+          <AlertTitle className="rtl:text-right">
+            {t("login.failedTitle")}
+          </AlertTitle>
+          <AlertDescription className="!text-red-300/90 rtl:text-right">
+            {t(apiErrorKey)}
           </AlertDescription>
         </Alert>
       )}
@@ -54,7 +57,9 @@ export default function LoginForm({ loginForm }: LoginFormProps) {
           {...register("email")}
         />
         {errors.email && (
-          <p className="text-sm text-red-400">{errors.email.message}</p>
+          <p className="text-sm text-red-400">
+            {t(errors.email.message as StringKey)}
+          </p>
         )}
       </div>
 
@@ -91,7 +96,9 @@ export default function LoginForm({ loginForm }: LoginFormProps) {
           </button>
         </div>
         {errors.password && (
-          <p className="text-sm text-red-400">{errors.password.message}</p>
+          <p className="text-sm text-red-400">
+            {t(errors.password.message as StringKey)}
+          </p>
         )}
       </div>
 
