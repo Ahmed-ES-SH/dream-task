@@ -4,7 +4,7 @@ import { toast } from "@/components/ui/toast";
 import { useMfaSetup } from "@/hooks/useMfa";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslations } from "@/hooks/useTranslations";
-import { AUTH_UNAUTHORIZED_EVENT } from "@/lib/api";
+import { AUTH_UNAUTHORIZED_EVENT } from "@/lib/http";
 import {
   getApiErrorCode,
   getApiErrorMessage,

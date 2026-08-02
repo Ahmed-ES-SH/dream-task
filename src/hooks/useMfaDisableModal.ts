@@ -5,7 +5,10 @@ import { useForm, useWatch } from "react-hook-form";
 import { toast } from "@/components/ui/toast";
 import { useMfaDisable } from "@/hooks/useMfa";
 import { useTranslations } from "@/hooks/useTranslations";
-import { AUTH_UNAUTHORIZED_EVENT, getRetryAfterSeconds } from "@/lib/api";
+import {
+  AUTH_UNAUTHORIZED_EVENT,
+  getRetryAfterSeconds,
+} from "@/lib/http";
 import {
   getApiErrorCode,
   getApiErrorMessage,

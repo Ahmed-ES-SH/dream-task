@@ -11,7 +11,7 @@ import {
   getApiErrorKey,
   getApiErrorStatus,
 } from "@/lib/apiErrors";
-import { getRetryAfterSeconds } from "@/lib/api";
+import { getRetryAfterSeconds } from "@/lib/http";
 import type {
   MfaLoginVerifyResponse,
   MfaSetupVerifyResponse,

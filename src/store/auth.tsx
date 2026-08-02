@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { loginRequest, logoutRequest } from "@/lib/api";
 import {
   AUTH_UNAUTHORIZED_EVENT,
   clearAuthTokens,
@@ -15,12 +16,10 @@ import {
   finalizeLoginWithMfa,
   getAccessToken,
   getStoredMfaActive,
-  loginRequest,
-  logoutRequest,
   setAccessToken,
   setRefreshToken,
   setStoredMfaActive,
-} from "@/lib/api";
+} from "@/lib/http";
 import { queryClient } from "@/lib/queryClient";
 import { getMfaStatus } from "@/lib/profile";
 import type { LoginRequest } from "@/types/auth";
