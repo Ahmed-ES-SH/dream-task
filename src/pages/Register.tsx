@@ -1,13 +1,11 @@
-import LocaleLink from "@/components/website/LocaleLink";
+import {
+  GatewayAmbient,
+  GatewayBrandPanel,
+  GatewayCorners,
+} from "../components/auth/Gateway";
+import LocaleLink from "../components/website/LocaleLink";
 import { useTranslations } from "../hooks/useTranslations";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
@@ -15,78 +13,106 @@ export default function SignUp() {
   const t = useTranslations();
 
   return (
-    <div className="relative flex min-h-[calc(100vh-8rem)] items-center justify-center overflow-hidden bg-linear-to-br from-slate-50 via-white to-slate-100 px-4 py-10">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_40%)]" />
+    <div className="relative grid min-h-[calc(100vh-4rem)] overflow-hidden bg-gateway lg:grid-cols-2">
+      <GatewayAmbient />
 
-      <Card className="w-full max-w-md border-0 shadow-2xl shadow-slate-200/60">
-        <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">
-            {t("register.title")}
-          </CardTitle>
+      <GatewayBrandPanel description={t("register.description")} />
 
-          <CardDescription>{t("register.description")}</CardDescription>
-        </CardHeader>
+      <section className="relative flex items-center justify-center px-4 py-12 lg:px-12">
+        <div className="relative w-full max-w-md">
+          <GatewayCorners />
 
-        <CardContent>
-          <form className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="name">{t("register.nameLabel")}</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                className="h-11"
-              />
+          <div className="pt-14 pb-10 text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-gateway-fg">
+              {t("register.title")}
+            </h1>
+            <p className="mt-2 text-sm text-gateway-muted lg:hidden">
+              {t("register.description")}
+            </p>
+
+            <div className="mt-8 text-start">
+              <form className="space-y-5">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="name"
+                    className="text-xs font-medium tracking-wider text-gateway-muted uppercase"
+                  >
+                    {t("register.nameLabel")}
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    className="h-11 rounded-none border-gateway-border bg-gateway-fg/5 text-gateway-fg caret-gateway-fg placeholder:text-gateway-fg/40 focus-visible:border-gateway-fg/60 focus-visible:ring-0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email"
+                    className="text-xs font-medium tracking-wider text-gateway-muted uppercase"
+                  >
+                    {t("register.emailLabel")}
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    className="h-11 rounded-none border-gateway-border bg-gateway-fg/5 text-gateway-fg caret-gateway-fg placeholder:text-gateway-fg/40 focus-visible:border-gateway-fg/60 focus-visible:ring-0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="password"
+                    className="text-xs font-medium tracking-wider text-gateway-muted uppercase"
+                  >
+                    {t("register.passwordLabel")}
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="h-11 rounded-none border-gateway-border bg-gateway-fg/5 text-gateway-fg caret-gateway-fg placeholder:text-gateway-fg/40 focus-visible:border-gateway-fg/60 focus-visible:ring-0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="confirmPassword"
+                    className="text-xs font-medium tracking-wider text-gateway-muted uppercase"
+                  >
+                    {t("register.confirmPasswordLabel")}
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    className="h-11 rounded-none border-gateway-border bg-gateway-fg/5 text-gateway-fg caret-gateway-fg placeholder:text-gateway-fg/40 focus-visible:border-gateway-fg/60 focus-visible:ring-0"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="h-11 w-full rounded-none bg-gateway-fg text-base font-semibold tracking-wide text-gateway transition-colors hover:bg-gateway-fg/90"
+                >
+                  {t("register.submit")}
+                </Button>
+              </form>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("register.emailLabel")}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                className="h-11"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">{t("register.passwordLabel")}</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="h-11"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">
-                {t("register.confirmPasswordLabel")}
-              </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                className="h-11"
-              />
-            </div>
-
-            <Button type="submit" className="h-11 w-full text-base">
-              {t("register.submit")}
-            </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="mt-8 text-sm text-center text-gateway-muted">
               {t("register.hasAccount")}{" "}
               <LocaleLink
                 to="/login"
-                className="font-medium text-primary hover:underline"
+                className="font-medium text-gateway-fg underline-offset-4 hover:underline"
               >
                 {t("register.signIn")}
               </LocaleLink>
             </p>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
