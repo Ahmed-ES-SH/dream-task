@@ -1,5 +1,10 @@
 import { Link, useLocation } from "react-router";
-import { CheckIcon, GlobeIcon } from "lucide-react";
+import {
+  CheckIcon,
+  GlobeIcon,
+  LayoutDashboardIcon,
+  LogInIcon,
+} from "lucide-react";
 
 import { Button } from "../ui/button";
 import {
@@ -29,18 +34,29 @@ export default function Navbar() {
 
   return (
     <header className="border-b">
-      <div className="container mx-auto flex h-16 items-center justify-between">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <LocaleLink to="/" className="text-xl font-bold">
           {t("navbar.brand")}
         </LocaleLink>
 
         <NavigationMenu>
-          <NavigationMenuList>
+          <NavigationMenuList className="gap-0.5 sm:gap-1">
             <NavigationMenuItem>
+              <Button
+                variant="ghost"
+                size="icon"
+                nativeButton={false}
+                render={<LocaleLink to="/login" />}
+                aria-label={t("navbar.login")}
+                className="sm:hidden"
+              >
+                <LogInIcon className="rtl:-scale-x-100" />
+              </Button>
               <Button
                 variant="ghost"
                 nativeButton={false}
                 render={<LocaleLink to="/login" />}
+                className="hidden sm:inline-flex"
               >
                 {t("navbar.login")}
               </Button>
@@ -48,8 +64,18 @@ export default function Navbar() {
 
             <NavigationMenuItem>
               <Button
+                size="icon"
                 nativeButton={false}
                 render={<LocaleLink to="/dashboard" />}
+                aria-label={t("navbar.dashboard")}
+                className="sm:hidden"
+              >
+                <LayoutDashboardIcon />
+              </Button>
+              <Button
+                nativeButton={false}
+                render={<LocaleLink to="/dashboard" />}
+                className="hidden sm:inline-flex"
               >
                 {t("navbar.dashboard")}
               </Button>
@@ -65,11 +91,13 @@ export default function Navbar() {
                   render={
                     <Button
                       variant="ghost"
-                      className="gap-1.5"
+                      className="gap-1.5 px-2.5 sm:px-3"
                       aria-label={t("common.language")}
                     >
                       <GlobeIcon className="size-4" />
-                      {t(`common.languages.${locale}`)}
+                      <span className="hidden sm:inline">
+                        {t(`common.languages.${locale}`)}
+                      </span>
                     </Button>
                   }
                 />
