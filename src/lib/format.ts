@@ -14,6 +14,16 @@ export function formatDate(
   }).format(date);
 }
 
+// Mask an email for the login challenge step: keep the first character of the
+// local part and the full domain, e.g. "u***@domain.com" (spec §6.1).
+export function maskEmail(email: string): string {
+  const atIndex = email.indexOf("@");
+
+  if (atIndex <= 0) return email;
+
+  return `${email.slice(0, 1)}***${email.slice(atIndex)}`;
+}
+
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
 

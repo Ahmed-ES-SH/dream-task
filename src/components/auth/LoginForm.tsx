@@ -7,7 +7,11 @@ import { Label } from "@/components/ui/label";
 import { useLoginForm } from "@/hooks/useLoginForm";
 import { useTranslations } from "@/hooks/useTranslations";
 
-export default function LoginForm() {
+type LoginFormProps = {
+  loginForm: ReturnType<typeof useLoginForm>;
+};
+
+export default function LoginForm({ loginForm }: LoginFormProps) {
   const t = useTranslations();
   const {
     register,
@@ -16,7 +20,7 @@ export default function LoginForm() {
     showPassword,
     togglePassword,
     onSubmit,
-  } = useLoginForm();
+  } = loginForm;
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">

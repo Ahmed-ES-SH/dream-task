@@ -58,7 +58,10 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "noAccount": "Don't have an account?",
-    "createOne": "Create one"
+    "createOne": "Create one",
+    "mfaTitle": "Two-factor authentication",
+    "mfaDescription": "Enter the 6-digit code from your authenticator app",
+    "mfaNotYou": "Not you?"
   },
   "register": {
     "title": "Create account",
@@ -94,5 +97,16 @@
     "empty": "No profile data is available yet.",
     "errorTitle": "Failed to load profile",
     "error": "We couldn't load your profile. Please try again."
+  },
+  "mfa": {
+    "backToSignIn": "Back to sign in",
+    "challengeExpired": "This sign-in request expired — please sign in again.",
+    "codeLabel": "Authentication code",
+    "codeInvalid": "Enter the 6-digit code",
+    "codeExpired": "Code expired — enter the new code",
+    "rateLimited": "Too many attempts. Please try again later.",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "back": "Back"
   }
 }

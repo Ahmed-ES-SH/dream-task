@@ -7,8 +7,10 @@ export type LoginRequest = {
 };
 
 export type LoginResponse = {
-  accessToken: string;
+  accessToken?: string;
   refreshToken?: string;
+  mfaToken?: string;
+  mfaRequired: boolean;
   user?: User | null;
 };
 
@@ -22,15 +24,16 @@ export function normalizeLoginResponse(raw: unknown): LoginResponse {
     "jwt",
   ]);
 
-  if (!accessToken) {
-    throw new Error("No access token found in login response");
-  }
+  const mfaToken = pickString(payload, ["mfaToken", "mfa_token"]);
+  const mfaRequired = Boolean(mfaToken) || Boolean(payload.mfa_required);
 
   const rawUser = payload.user;
 
   return {
     accessToken,
     refreshToken: pickString(payload, ["refreshToken", "refresh_token"]),
+    mfaToken,
+    mfaRequired,
     user: typeof rawUser === "object" && rawUser !== null
       ? normalizeUser(rawUser)
       : null,

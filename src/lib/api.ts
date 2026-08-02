@@ -1,5 +1,6 @@
 import axios, {
   type AxiosInstance,
+  type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
 } from "axios";
 
@@ -10,6 +11,15 @@ import {
   type LoginRequest,
   type LoginResponse,
 } from "@/types/auth";
+import {
+  normalizeLoginVerify,
+  normalizeMfaSetup,
+  normalizeSetupVerify,
+  type MfaLoginVerifyResponse,
+  type MfaSetup,
+  type MfaSetupVerifyResponse,
+  type MfaVerifyBody,
+} from "@/types/mfa";
 import { normalizeUser, type User } from "@/types/user";
 
 import { pickString, unwrapPayload, type Payload } from "./payload";
@@ -81,6 +91,11 @@ function isAuthPage(): boolean {
 
 // axios' config type has no slot for our retry marker, so extend it locally.
 type RetryableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
+// Custom flag set on login-context mfa/verify calls; a 401 there means the
+// challenge expired, not that the session is invalid, so the interceptor must
+// skip the refresh flow for them.
+type VerifyConfig = AxiosRequestConfig & { _skipRefresh: true };
 
 // ---- Single-flight token refresh --------------------------------------
 // Only one refresh request runs at a time; concurrent 401s are queued and all
@@ -171,11 +186,22 @@ apiClient.interceptors.response.use(
     }
 
     // Never refresh for the endpoints/pages that are allowed to 401:
-    // bad credentials, anonymous pages, and the refresh call itself.
+    // bad credentials, anonymous pages, the refresh call itself, and
+    // login-context mfa/verify (where a 401 means the challenge expired,
+    // not that the session is invalid).
     const isAuthRequest =
       url?.includes("/auth/login") || url?.includes("/auth/register");
+    const isLoginMfaVerify =
+      url?.includes("/auth/mfa/verify") &&
+      (config as RetryableConfig & { _skipRefresh?: boolean })._skipRefresh ===
+        true;
 
-    if (isAuthRequest || isAuthPage() || url?.includes("/auth/refresh")) {
+    if (
+      isAuthRequest ||
+      isAuthPage() ||
+      url?.includes("/auth/refresh") ||
+      isLoginMfaVerify
+    ) {
       return Promise.reject(error);
     }
 
@@ -226,6 +252,47 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+// Best-effort extraction of the backend error code (e.g. MFA_ALREADY_ENABLED,
+// MFA_NOT_ENABLED, MFA_RATE_LIMITED) from any error, used by components to
+// branch on specific server errors. Returns undefined when no code is present.
+export function getApiErrorCode(error: unknown): string | undefined {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as Payload | undefined;
+    const code = data && pickString(data, ["code", "errorCode", "error_code"]);
+    if (code) return code;
+  }
+
+  return undefined;
+}
+
+// Best-effort extraction of the HTTP status code (401/422/429/...) from any
+// error, used by components to branch on specific server responses.
+export function getApiErrorStatus(error: unknown): number | undefined {
+  if (axios.isAxiosError(error)) {
+    return error.response?.status;
+  }
+
+  return undefined;
+}
+
+// Seconds from a 429 response's `Retry-After` header, or 0 when absent or
+// unparseable (spec §12.3). Used to disable the submit button during the
+// rate-limit window.
+export function getRetryAfterSeconds(error: unknown): number {
+  if (axios.isAxiosError(error)) {
+    const header = error.response?.headers?.["retry-after"];
+
+    if (typeof header === "string") {
+      const seconds = Number.parseInt(header, 10);
+      if (Number.isFinite(seconds) && seconds > 0) return seconds;
+    } else if (typeof header === "number" && header > 0) {
+      return Math.ceil(header);
+    }
+  }
+
+  return 0;
+}
+
 // ---- Public API wrappers ----------------------------------------------
 // Each wrapper calls one endpoint and normalizes the raw response into the
 // app's own types (see src/types/*).
@@ -244,4 +311,70 @@ export async function logoutRequest(): Promise<void> {
 export async function profileRequest(): Promise<User> {
   const response = await apiClient.get(PROFILE_API.GET_PROFILE);
   return normalizeUser(response.data);
+}
+
+// ---- Login-verify token handshake (spec §11.5) -------------------------
+// The documented login-verify response carries a refresh token but no access
+// token; when the access token is absent we mint one via the existing refresh
+// path. If the backend ever returns an access token at login-verify, this
+// branch never triggers (open question Q2).
+export async function finalizeLoginWithMfa(
+  result: MfaLoginVerifyResponse,
+): Promise<void> {
+  if (result.accessToken) {
+    setAccessToken(result.accessToken);
+  }
+
+  if (result.refreshToken) {
+    setRefreshToken(result.refreshToken);
+  }
+
+  if (!result.accessToken && !result.refreshToken) {
+    throw new Error("MFA login: verify response carried no tokens");
+  }
+
+  if (!result.accessToken) {
+    // Mint an access token from the refresh token we just stored.
+    try {
+      const accessToken = await refreshAccessToken();
+
+      if (!accessToken) {
+        throw new Error("MFA login: refresh failed to mint an access token");
+      }
+    } catch (error) {
+      // Don't leave a half-stored session behind when the handshake fails.
+      clearAuthTokens();
+      throw error;
+    }
+  }
+}
+
+export async function mfaSetupRequest(email: string): Promise<MfaSetup> {
+  const response = await apiClient.post(AUTH_API.MFA_SETUP, {
+    issuer: "MAYA",
+    label: email,
+  });
+  return normalizeMfaSetup(response.data);
+}
+
+export async function mfaVerifyRequest(
+  body: MfaVerifyBody,
+): Promise<MfaSetupVerifyResponse | MfaLoginVerifyResponse> {
+  if (body.context === "login") {
+    // A 401 here means the challenge expired, not that the session is
+    // invalid, so the refresh flow must be skipped (see the interceptor).
+    const config: VerifyConfig = { _skipRefresh: true };
+    const response = await apiClient.post(AUTH_API.MFA_VERIFY, body, config);
+    return normalizeLoginVerify(response.data);
+  }
+
+  const response = await apiClient.post(AUTH_API.MFA_VERIFY, body);
+  return normalizeSetupVerify(response.data);
+}
+
+export async function mfaDisableRequest(body: {
+  password: string;
+  code: string;
+}): Promise<void> {
+  await apiClient.post(AUTH_API.MFA_DISABLE, body);
 }
