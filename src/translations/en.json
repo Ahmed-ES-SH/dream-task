@@ -42,6 +42,11 @@
     "title": "Dashboard",
     "description": "Welcome back — here is an overview of your account."
   },
+  "settings": {
+    "title": "Settings",
+    "securityTitle": "Security",
+    "securityDescription": "Security settings"
+  },
   "login": {
     "title": "Welcome back",
     "description": "Sign in to your account to continue.",
