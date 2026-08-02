@@ -1,0 +1,86 @@
+{
+  "common": {
+    "signIn": "ورود",
+    "dashboard": "داشبورد",
+    "emailAddress": "آدرس ایمیل",
+    "password": "رمز عبور",
+    "createAccount": "ایجاد حساب",
+    "language": "زبان",
+    "logout": "خروج",
+    "retry": "تلاش مجدد",
+    "languages": {
+      "en": "English",
+      "ar": "العربية",
+      "fa": "فارسی"
+    }
+  },
+  "navbar": {
+    "brand": "FlickHQ",
+    "login": "ورود",
+    "dashboard": "داشبورد"
+  },
+  "footer": {
+    "copyright": "© 2026 FlickHQ"
+  },
+  "home": {
+    "title": "خانه"
+  },
+  "dashboard": {
+    "title": "داشبورد",
+    "description": "خوش برگشتی — نمای کلی حساب شما."
+  },
+  "login": {
+    "title": "خوش برگشتی",
+    "description": "برای ادامه به حساب خود وارد شوید.",
+    "emailLabel": "آدرس ایمیل",
+    "passwordLabel": "رمز عبور",
+    "submit": "ورود",
+    "signingIn": "در حال ورود…",
+    "failed": "ورود ناموفق بود. ایمیل و رمز عبور را بررسی کنید و دوباره تلاش کنید.",
+    "failedTitle": "امکان ورود وجود ندارد",
+    "emailRequired": "ایمیل الزامی است",
+    "emailInvalid": "یک ایمیل معتبر وارد کنید",
+    "passwordRequired": "رمز عبور الزامی است",
+    "passwordMin": "رمز عبور باید حداقل ۶ کاراکتر باشد",
+    "showPassword": "نمایش رمز عبور",
+    "hidePassword": "پنهان کردن رمز عبور",
+    "demoHint": "اطلاعات آزمایشی: demo@example.com / demo1234",
+    "noAccount": "حساب کاربری ندارید؟",
+    "createOne": "یکی بسازید"
+  },
+  "register": {
+    "title": "ایجاد حساب",
+    "description": "برای شروع حساب خود را ایجاد کنید.",
+    "nameLabel": "نام کامل",
+    "emailLabel": "آدرس ایمیل",
+    "passwordLabel": "رمز عبور",
+    "confirmPasswordLabel": "تأیید رمز عبور",
+    "submit": "ایجاد حساب",
+    "hasAccount": "قبلاً حساب دارید؟",
+    "signIn": "ورود"
+  },
+  "profile": {
+    "menu": "منوی کاربر",
+    "role": "نقش",
+    "status": "وضعیت حساب",
+    "memberSince": "عضو از",
+    "lastLogin": "آخرین ورود",
+    "roles": {
+      "admin": "مدیر",
+      "manager": "مدیر ارشد",
+      "user": "کاربر",
+      "member": "عضو",
+      "support": "پشتیبانی"
+    },
+    "statuses": {
+      "active": "فعال",
+      "pending": "در انتظار",
+      "suspended": "معلق",
+      "banned": "مسدود"
+    },
+    "emptyTitle": "چیزی برای نمایش نیست",
+    "empty": "هنوز اطلاعاتی برای پروفایل موجود نیست.",
+    "errorTitle": "بارگذاری پروفایل ناموفق بود",
+    "error": "امکان بارگذاری پروفایل شما وجود نداشت. دوباره تلاش کنید."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "common": {
+    "signIn": "Sign in",
+    "dashboard": "Dashboard",
+    "emailAddress": "Email address",
+    "password": "Password",
+    "createAccount": "Create account",
+    "language": "Language",
+    "logout": "Log out",
+    "retry": "Retry",
+    "languages": {
+      "en": "English",
+      "ar": "العربية",
+      "fa": "فارسی"
+    }
+  },
+  "navbar": {
+    "brand": "FlickHQ",
+    "login": "Login",
+    "dashboard": "Dashboard"
+  },
+  "footer": {
+    "copyright": "© 2026 FlickHQ"
+  },
+  "home": {
+    "title": "Home"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Welcome back — here is an overview of your account."
+  },
+  "login": {
+    "title": "Welcome back",
+    "description": "Sign in to your account to continue.",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "submit": "Sign in",
+    "signingIn": "Signing in…",
+    "failed": "Sign-in failed. Please check your email and password and try again.",
+    "failedTitle": "Unable to sign in",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email address",
+    "passwordRequired": "Password is required",
+    "passwordMin": "Password must be at least 6 characters",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "demoHint": "Demo credentials: demo@example.com / demo1234",
+    "noAccount": "Don't have an account?",
+    "createOne": "Create one"
+  },
+  "register": {
+    "title": "Create account",
+    "description": "Create your account to get started.",
+    "nameLabel": "Full name",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm password",
+    "submit": "Create account",
+    "hasAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "profile": {
+    "menu": "User menu",
+    "role": "Role",
+    "status": "Account status",
+    "memberSince": "Member since",
+    "lastLogin": "Last login",
+    "roles": {
+      "admin": "Administrator",
+      "manager": "Manager",
+      "user": "User",
+      "member": "Member",
+      "support": "Support"
+    },
+    "statuses": {
+      "active": "Active",
+      "pending": "Pending",
+      "suspended": "Suspended",
+      "banned": "Banned"
+    },
+    "emptyTitle": "Nothing to show",
+    "empty": "No profile data is available yet.",
+    "errorTitle": "Failed to load profile",
+    "error": "We couldn't load your profile. Please try again."
+  }
+}

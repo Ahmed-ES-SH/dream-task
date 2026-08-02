@@ -1,0 +1,86 @@
+{
+  "common": {
+    "signIn": "تسجيل الدخول",
+    "dashboard": "لوحة التحكم",
+    "emailAddress": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "createAccount": "إنشاء حساب",
+    "language": "اللغة",
+    "logout": "تسجيل الخروج",
+    "retry": "إعادة المحاولة",
+    "languages": {
+      "en": "English",
+      "ar": "العربية",
+      "fa": "فارسی"
+    }
+  },
+  "navbar": {
+    "brand": "FlickHQ",
+    "login": "تسجيل الدخول",
+    "dashboard": "لوحة التحكم"
+  },
+  "footer": {
+    "copyright": "© 2026 FlickHQ"
+  },
+  "home": {
+    "title": "الرئيسية"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "description": "مرحباً بعودتك — إليك نظرة عامة على حسابك."
+  },
+  "login": {
+    "title": "مرحباً بعودتك",
+    "description": "سجّل الدخول إلى حسابك للمتابعة.",
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "submit": "تسجيل الدخول",
+    "signingIn": "جارٍ تسجيل الدخول…",
+    "failed": "فشل تسجيل الدخول. تحقق من البريد الإلكتروني وكلمة المرور وحاول مرة أخرى.",
+    "failedTitle": "تعذّر تسجيل الدخول",
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "emailInvalid": "أدخل بريداً إلكترونياً صحيحاً",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "passwordMin": "يجب ألا تقل كلمة المرور عن 6 أحرف",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
+    "demoHint": "بيانات التجربة: demo@example.com / demo1234",
+    "noAccount": "ليس لديك حساب؟",
+    "createOne": "أنشئ واحداً"
+  },
+  "register": {
+    "title": "إنشاء حساب",
+    "description": "أنشئ حسابك للبدء.",
+    "nameLabel": "الاسم الكامل",
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "confirmPasswordLabel": "تأكيد كلمة المرور",
+    "submit": "إنشاء حساب",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "signIn": "تسجيل الدخول"
+  },
+  "profile": {
+    "menu": "قائمة المستخدم",
+    "role": "الدور",
+    "status": "حالة الحساب",
+    "memberSince": "عضو منذ",
+    "lastLogin": "آخر تسجيل دخول",
+    "roles": {
+      "admin": "مدير",
+      "manager": "مسؤول",
+      "user": "مستخدم",
+      "member": "عضو",
+      "support": "دعم"
+    },
+    "statuses": {
+      "active": "نشط",
+      "pending": "قيد الانتظار",
+      "suspended": "موقوف",
+      "banned": "محظور"
+    },
+    "emptyTitle": "لا شيء لعرضه",
+    "empty": "لا توجد بيانات للملف الشخصي بعد.",
+    "errorTitle": "فشل تحميل الملف الشخصي",
+    "error": "تعذّر تحميل ملفك الشخصي. حاول مرة أخرى."
+  }
+}
