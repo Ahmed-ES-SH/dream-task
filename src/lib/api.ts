@@ -64,6 +64,25 @@ export function clearAuthTokens(): void {
   localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
 }
 
+// MFA-active flag. The backend reports MFA state on the login/login-verify
+// responses but not on /me, so the frontend persists the last known value
+// (localStorage) and re-establishes it on every sign-in. Consumed by MfaGuard
+// and the Security card to enforce "MFA must be active for dashboard access".
+export const MFA_ACTIVE_STORAGE_KEY = "mfa_active";
+
+export function getStoredMfaActive(): boolean | null {
+  const raw = localStorage.getItem(MFA_ACTIVE_STORAGE_KEY);
+  return raw === "true" ? true : raw === "false" ? false : null;
+}
+
+export function setStoredMfaActive(active: boolean): void {
+  localStorage.setItem(MFA_ACTIVE_STORAGE_KEY, String(active));
+}
+
+export function clearStoredMfaActive(): void {
+  localStorage.removeItem(MFA_ACTIVE_STORAGE_KEY);
+}
+
 // Shared axios instance used by every API call in the app.
 const apiClient: AxiosInstance = axios.create({
   baseURL,
@@ -235,45 +254,6 @@ apiClient.interceptors.response.use(
     }
   },
 );
-
-// Best-effort extraction of a human-readable message from any error, used to
-// surface API errors in forms (falls back to the provided string).
-export function getApiErrorMessage(error: unknown, fallback: string): string {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data as Payload | undefined;
-    const message = data && pickString(data, ["message", "error", "detail"]);
-    if (message) return message;
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return fallback;
-}
-
-// Best-effort extraction of the backend error code (e.g. MFA_ALREADY_ENABLED,
-// MFA_NOT_ENABLED, MFA_RATE_LIMITED) from any error, used by components to
-// branch on specific server errors. Returns undefined when no code is present.
-export function getApiErrorCode(error: unknown): string | undefined {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data as Payload | undefined;
-    const code = data && pickString(data, ["code", "errorCode", "error_code"]);
-    if (code) return code;
-  }
-
-  return undefined;
-}
-
-// Best-effort extraction of the HTTP status code (401/422/429/...) from any
-// error, used by components to branch on specific server responses.
-export function getApiErrorStatus(error: unknown): number | undefined {
-  if (axios.isAxiosError(error)) {
-    return error.response?.status;
-  }
-
-  return undefined;
-}
 
 // Seconds from a 429 response's `Retry-After` header, or 0 when absent or
 // unparseable (spec §12.3). Used to disable the submit button during the

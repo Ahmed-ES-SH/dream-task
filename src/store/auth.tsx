@@ -11,25 +11,34 @@ import {
 import {
   AUTH_UNAUTHORIZED_EVENT,
   clearAuthTokens,
+  clearStoredMfaActive,
   finalizeLoginWithMfa,
   getAccessToken,
+  getStoredMfaActive,
   loginRequest,
   logoutRequest,
   setAccessToken,
   setRefreshToken,
+  setStoredMfaActive,
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
+import { getMfaStatus } from "@/lib/profile";
 import type { LoginRequest } from "@/types/auth";
 import type { MfaLoginVerifyResponse } from "@/types/mfa";
+import type { User } from "@/types/user";
 
 export type LoginResult =
-  | { status: "authenticated" }
+  | { status: "authenticated"; user: User | null }
   | { status: "mfa_required"; mfaToken: string };
 
 type AuthContextValue = {
   isAuthenticated: boolean;
+  // Last known MFA state for the current session. `null` = unknown (no
+  // signal received yet, e.g. legacy session or response without MFA fields).
+  mfaActive: boolean | null;
   login: (credentials: LoginRequest) => Promise<LoginResult>;
   completeLoginWithMfa: (result: MfaLoginVerifyResponse) => Promise<void>;
+  updateMfaActive: (next: boolean | null) => void;
   logout: () => Promise<void>;
 };
 
@@ -39,6 +48,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
     Boolean(getAccessToken()),
   );
+
+  const [mfaActive, setMfaActive] = useState<boolean | null>(() =>
+    getStoredMfaActive(),
+  );
+
+  const updateMfaActive = useCallback((next: boolean | null) => {
+    setMfaActive(next);
+    if (next === null) {
+      clearStoredMfaActive();
+    } else {
+      setStoredMfaActive(next);
+    }
+  }, []);
 
   const login = useCallback(async (credentials: LoginRequest): Promise<LoginResult> => {
     const response = await loginRequest(credentials);
@@ -61,17 +83,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setIsAuthenticated(true);
 
-    return { status: "authenticated" };
-  }, []);
+    // The login response may carry the user (with `mfa.enabled`/`mfa.verified`);
+    // the caller uses it to decide the post-login destination: users without
+    // MFA must be sent to settings, because /me requires a verified MFA
+    // session. Persist the reported MFA state so the guard and the Security
+    // card stay accurate across reloads.
+    const mfaStatus = getMfaStatus(response.user);
+    if (mfaStatus !== null) {
+      updateMfaActive(mfaStatus);
+    }
+
+    return { status: "authenticated", user: response.user ?? null };
+  }, [updateMfaActive]);
 
   const completeLoginWithMfa = useCallback(
     async (result: MfaLoginVerifyResponse) => {
       // §11.5 handshake: store the returned tokens and, when the access token
-      // is absent, mint one via the refresh path.
+      // is absent, mint one via the refresh path. The challenge flow only
+      // runs for MFA-enabled accounts, so the state is `verified` when the
+      // response reports it, `true` otherwise.
       await finalizeLoginWithMfa(result);
+      updateMfaActive(result.mfa?.verified ?? true);
       setIsAuthenticated(true);
     },
-    [],
+    [updateMfaActive],
   );
 
   const logout = useCallback(async () => {
@@ -81,14 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // The session is considered ended client-side regardless of the server response.
     } finally {
       clearAuthTokens();
+      clearStoredMfaActive();
+      updateMfaActive(null);
       queryClient.removeQueries({ queryKey: ["profile"] });
       setIsAuthenticated(false);
     }
-  }, []);
+  }, [updateMfaActive]);
 
   useEffect(() => {
     const onUnauthorized = () => {
       clearAuthTokens();
+      clearStoredMfaActive();
+      updateMfaActive(null);
       queryClient.removeQueries({ queryKey: ["profile"] });
       setIsAuthenticated(false);
     };
@@ -96,11 +135,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, onUnauthorized);
 
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, onUnauthorized);
-  }, []);
+  }, [updateMfaActive]);
 
   const value = useMemo(
-    () => ({ isAuthenticated, login, completeLoginWithMfa, logout }),
-    [isAuthenticated, login, completeLoginWithMfa, logout],
+    () => ({
+      isAuthenticated,
+      mfaActive,
+      login,
+      completeLoginWithMfa,
+      updateMfaActive,
+      logout,
+    }),
+    [isAuthenticated, mfaActive, login, completeLoginWithMfa, updateMfaActive, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

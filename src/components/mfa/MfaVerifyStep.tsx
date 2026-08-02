@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { useMfaVerify } from "@/hooks/useMfa";
 import { useTranslations } from "@/hooks/useTranslations";
 import {
-  getApiErrorMessage,
+  getApiErrorCode,
+  getApiErrorKey,
   getApiErrorStatus,
-  getRetryAfterSeconds,
-} from "@/lib/api";
+} from "@/lib/apiErrors";
+import { getRetryAfterSeconds } from "@/lib/api";
 import type {
   MfaLoginVerifyResponse,
   MfaSetupVerifyResponse,
 } from "@/types/mfa";
+import type { StringKey } from "@/types/profile";
 import { otpSchema } from "@/validations/mfa";
 
 type MfaVerifyStepProps = {
@@ -40,9 +42,10 @@ export default function MfaVerifyStep({
   const t = useTranslations();
   const verify = useMfaVerify();
   const [code, setCode] = useState("");
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  );
+  // The translation key of the current error (not its text): it is translated
+  // at render time so it stays in sync when the user switches language.
+  const [verificationErrorKey, setVerificationErrorKey] =
+    useState<StringKey | null>(null);
   const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
   const retryTimerRef = useRef<number | null>(null);
 
@@ -70,7 +73,7 @@ export default function MfaVerifyStep({
 
     // Dismiss the stale inline error as soon as the user retypes.
     if (value.length > 0) {
-      setVerificationError(null);
+      setVerificationErrorKey(null);
     }
   };
 
@@ -81,11 +84,11 @@ export default function MfaVerifyStep({
 
     const parsed = otpSchema(t).safeParse(currentCode);
     if (!parsed.success) {
-      setVerificationError(t("mfa.codeInvalid"));
+      setVerificationErrorKey("mfa.codeInvalid");
       return;
     }
 
-    setVerificationError(null);
+    setVerificationErrorKey(null);
 
     verify.mutate(
       {
@@ -97,21 +100,22 @@ export default function MfaVerifyStep({
         onSuccess: (result) => onSuccess(result),
         onError: (error) => {
           const status = getApiErrorStatus(error);
+          const code = getApiErrorCode(error);
 
-          if (status === 401 && context === "login") {
+          if (status === 401 && context === "login" && code !== "MFA_CODE_INVALID") {
             // Challenge expired — not a session problem. Alert via the caller
             // (which returns to the credentials step); the interceptor already
             // skips the refresh flow for login-context verify (§11.5).
+            // MFA_CODE_INVALID is excluded: a wrong code is a user error with
+            // its own message, not an expired challenge.
             onChallengeExpired?.();
             return;
           }
 
           if (status === 429) {
-            // Rate limited: show the server message, and honor Retry-After
+            // Rate limited: show the mapped message, and honor Retry-After
             // by disabling the submit button until the window elapses (§12.3).
-            setVerificationError(
-              getApiErrorMessage(error, t("mfa.rateLimited")),
-            );
+            setVerificationErrorKey(getApiErrorKey(error, "mfa.rateLimited"));
 
             const seconds = getRetryAfterSeconds(error);
             if (seconds > 0) {
@@ -125,17 +129,13 @@ export default function MfaVerifyStep({
           }
 
           if (status === 422) {
-            // Invalid/expired code: show the message; OtpInput clears the
-            // cells and refocuses cell 0 on the error transition (§12.2).
-            setVerificationError(
-              getApiErrorMessage(error, t("mfa.codeExpired")),
-            );
+            // Invalid/expired code: show the mapped message; OtpInput clears
+            // the cells and refocuses cell 0 on the error transition (§12.2).
+            setVerificationErrorKey(getApiErrorKey(error, "mfa.codeExpired"));
             return;
           }
 
-          setVerificationError(
-            getApiErrorMessage(error, t("mfa.codeInvalid")),
-          );
+          setVerificationErrorKey(getApiErrorKey(error, "mfa.codeInvalid"));
         },
       },
     );
@@ -153,17 +153,17 @@ export default function MfaVerifyStep({
       <OtpInput
         value={code}
         onChange={handleCodeChange}
-        error={verificationError !== null}
+        error={verificationErrorKey !== null}
         disabled={isVerifying}
         autoFocus
         onSubmitComplete={handleSubmit}
       />
 
       <div aria-live="polite">
-        {verificationError && (
+        {verificationErrorKey && (
           <Alert variant="destructive">
             <CircleAlert />
-            <AlertDescription>{verificationError}</AlertDescription>
+            <AlertDescription>{t(verificationErrorKey)}</AlertDescription>
           </Alert>
         )}
       </div>

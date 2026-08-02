@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { Translator } from "@/validations/auth";
+import type { Translator } from "@/types/profile";
 
 // A TOTP code is always exactly 6 digits (spec §12.1).
 export const otpSchema = (t: Translator) =>

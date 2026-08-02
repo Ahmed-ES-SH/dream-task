@@ -50,10 +50,19 @@ export const router = createBrowserRouter([
               {
                 index: true,
                 lazy: async () => {
-                  const { default: Component } = await import(
-                    "@/pages/Dashboard"
-                  );
-                  return { Component };
+                  const [{ default: Dashboard }, { default: MfaGuard }] =
+                    await Promise.all([
+                      import("@/pages/Dashboard"),
+                      import("./MfaGuard"),
+                    ]);
+
+                  return {
+                    Component: () => (
+                      <MfaGuard>
+                        <Dashboard />
+                      </MfaGuard>
+                    ),
+                  };
                 },
               },
               {

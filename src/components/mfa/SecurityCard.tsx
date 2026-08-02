@@ -1,66 +1,118 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { CircleAlert, Loader2, RefreshCw } from "lucide-react";
 
 import MfaDisableButton from "@/components/mfa/MfaDisableButton";
 import MfaDisableModal from "@/components/mfa/MfaDisableModal";
-import MfaSetupButton from "@/components/mfa/MfaSetupButton";
-import MfaSetupModal from "@/components/mfa/MfaSetupModal";
 import MfaStatusBadge, {
   type MfaStatus,
 } from "@/components/mfa/MfaStatusBadge";
-import { toast } from "@/components/ui/toast";
+import { Alert, AlertAction, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslations } from "@/hooks/useTranslations";
+import { getMfaStatus } from "@/lib/profile";
 import { queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/store/auth";
 
-// Security section card (spec §6.2, §8.1). Status is derived only from the
-// profile response's MFA fields (`mfa.enabled`) — no invented endpoints.
-// `mfaEnabled` is `null` (= `unknown`) when the profile exposes no MFA fields,
-// and flips locally after successful enable/disable mutations (Phases 10/11).
+// Time the MFA status check is allowed to take before the loading screen is
+// abandoned with the default error message. Guards against a hung profile
+// request that would otherwise leave the spinner running forever.
+const STATUS_TIMEOUT_MS = 8_000;
+
+// Security section card. The settings page is disable-only: the card shows
+// the MFA status and the "Disable MFA" action — whenever the status is not
+// confirmed `disabled` (spec §6.2: `unknown` keeps the action, the modal's
+// password + OTP check is the authority). Enabling is handled exclusively by
+// the post-login prompt (MfaEnablePromptDialog), never from this card.
 export default function MfaSecurityCard() {
   const t = useTranslations();
-  const { data: profile } = useProfile();
+  const { data: profile, isLoading, isError, refetch } = useProfile();
+  const { mfaActive, updateMfaActive } = useAuth();
+
   const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
   const [lastSyncedMfaEnabled, setLastSyncedMfaEnabled] = useState<
     boolean | undefined
   >(undefined);
-  const [setupOpen, setSetupOpen] = useState(false);
   const [disableOpen, setDisableOpen] = useState(false);
+  // True once the status check has finished (success or failure).
+  const [checkResolved, setCheckResolved] = useState(false);
+  // True when the status check timed out: the loading screen is replaced by
+  // the default error message instead of spinning forever.
+  const [timedOut, setTimedOut] = useState(false);
 
-  // Seed from the profile when it carries MFA fields; otherwise stay `null`.
-  // Re-seeds when the profile's field appears or changes (e.g. after a
-  // mutation-triggered invalidation) — documented "adjust state when props
-  // change" pattern (no effect, no cascading renders).
-  const profileMfaEnabled = profile?.mfa?.enabled;
+  // Watchdog: while the status is unresolved (profile fetch still in flight),
+  // arm an 8s timer that ends the loading screen with the default error
+  // message. The cleanup runs the moment the status resolves, so the timer
+  // can never fire after a real signal arrived.
+  useEffect(() => {
+    if (mfaEnabled !== null || checkResolved) return;
+
+    const id = window.setTimeout(() => {
+      setCheckResolved(true);
+      setTimedOut(true);
+    }, STATUS_TIMEOUT_MS);
+
+    return () => window.clearTimeout(id);
+  }, [mfaEnabled, checkResolved]);
+
+  // Seed from the profile when it carries MFA fields; otherwise fall back to
+  // the persisted MFA state captured at sign-in (the backend's /me exposes no
+  // MFA fields, so the login response is the authoritative signal). Re-seeds
+  // when either signal changes (e.g. after a mutation-triggered invalidation)
+  // — documented "adjust state when props change" pattern (no effect, no
+  // cascading renders).
+  const profileMfaState = getMfaStatus(profile) ?? mfaActive;
   if (
-    profileMfaEnabled !== undefined &&
-    profileMfaEnabled !== lastSyncedMfaEnabled
+    profileMfaState !== null &&
+    profileMfaState !== lastSyncedMfaEnabled
   ) {
-    setLastSyncedMfaEnabled(profileMfaEnabled);
-    setMfaEnabled(profileMfaEnabled);
+    setLastSyncedMfaEnabled(profileMfaState);
+    setMfaEnabled(profileMfaState);
+    setTimedOut(false);
+  }
+
+  // The profile query settled without MFA fields: whatever status exists is
+  // final — end the loading screen (a late timeout must not override it).
+  if (!isLoading && mfaEnabled === null && !checkResolved) {
+    setCheckResolved(true);
+  }
+
+  // A late successful response clears the timeout flag (the error state is
+  // otherwise derived from the query below).
+  if (!isLoading && profile !== undefined && timedOut) {
+    setTimedOut(false);
+  }
+
+  // Default error message when the check failed (query error) or timed out.
+  const statusError = isError || timedOut;
+
+  // Loading screen: the MFA status is still being determined.
+  if (mfaEnabled === null && !checkResolved) {
+    return (
+      <section className="rounded-lg border bg-card p-6">
+        <div
+          role="status"
+          className="flex items-center justify-center gap-2 py-8"
+        >
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
+            {t("mfa.statusChecking")}
+          </p>
+        </div>
+      </section>
+    );
   }
 
   // Status is `null` (= `unknown`) when the profile exposes no MFA fields.
   const status: MfaStatus =
     mfaEnabled === null ? "unknown" : mfaEnabled ? "enabled" : "disabled";
 
-  // Unknown → both actions available; enabled → only "Disable MFA";
-  // disabled → only "Enable MFA" (spec §6.2).
-  const showSetupButton = mfaEnabled !== true;
-  const showDisableButton = mfaEnabled !== false;
-
-  // Enable wizard finished: flip the card, toast, and refetch the profile —
-  // harmless if the profile carries no MFA fields (spec §8.1, §6.2).
-  const handleEnabled = () => {
-    setMfaEnabled(true);
-    queryClient.invalidateQueries({ queryKey: ["profile"] });
-    toast.success(t("mfa.enabledToast"));
-  };
-
   // Disable confirmation finished (200) or MFA was already disabled (404,
   // finished in another tab): flip the card and refetch the profile (§8.1).
   // The modal owns the success/already-disabled toasts (§7.2).
   const handleDisabled = () => {
     setMfaEnabled(false);
+    updateMfaActive(false);
     queryClient.invalidateQueries({ queryKey: ["profile"] });
   };
 
@@ -78,38 +130,48 @@ export default function MfaSecurityCard() {
         {t("settings.securityDescription")}
       </p>
 
-      <div className="mt-4 flex items-center gap-2">
-        {status !== "unknown" && <MfaStatusBadge status={status} />}
-        <p className="text-sm text-muted-foreground">{statusDescription}</p>
-      </div>
+      {statusError ? (
+        <Alert variant="destructive" className="mt-4">
+          <CircleAlert />
+          <AlertDescription>{t("mfa.statusCheckFailed")}</AlertDescription>
+          <AlertAction>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void refetch()}
+              className="gap-1.5"
+            >
+              <RefreshCw />
+              {t("common.retry")}
+            </Button>
+          </AlertAction>
+        </Alert>
+      ) : (
+        <>
+          <div className="mt-4 flex items-center gap-2">
+            {status !== "unknown" && <MfaStatusBadge status={status} />}
+            <p className="text-sm text-muted-foreground">
+              {statusDescription}
+            </p>
+          </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {showSetupButton && (
-          <MfaSetupButton
-            // Idempotent open: the flag gates MfaSetupModal from Phase 9.
-            onClick={() => {
-              if (!setupOpen) setSetupOpen(true);
-            }}
-          />
-        )}
-        {showDisableButton && (
-          <MfaDisableButton
-            // Idempotent open: the flag gates MfaDisableModal from Phase 11.
-            onClick={() => {
-              if (!disableOpen) setDisableOpen(true);
-            }}
-          />
-        )}
-      </div>
-
-      {/* 409 MFA_ALREADY_ENABLED (finished in another tab) flips the card
-          straight to enabled (§13). */}
-      <MfaSetupModal
-        open={setupOpen}
-        onOpenChange={setSetupOpen}
-        onAlreadyEnabled={() => setMfaEnabled(true)}
-        onEnabled={handleEnabled}
-      />
+          {mfaEnabled !== false && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <MfaDisableButton
+                // Idempotent open: the flag gates MfaDisableModal from
+                // Phase 11. In the `unknown` state (profile without MFA
+                // fields, spec §6.2) the Disable action stays available: the
+                // modal's password + OTP round-trip is the authoritative
+                // check, so a user with MFA already enabled can always
+                // disable it. Only a confirmed `disabled` status hides it.
+                onClick={() => {
+                  if (!disableOpen) setDisableOpen(true);
+                }}
+              />
+            </div>
+          )}
+        </>
+      )}
 
       {/* Disable confirmation: success or 404 (already disabled elsewhere)
           flips the card straight to disabled (§13). */}

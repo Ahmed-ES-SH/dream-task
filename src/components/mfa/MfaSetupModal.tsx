@@ -18,15 +18,21 @@ import { useProfile } from "@/hooks/useProfile";
 import { useTranslations } from "@/hooks/useTranslations";
 import {
   AUTH_UNAUTHORIZED_EVENT,
+} from "@/lib/api";
+import {
   getApiErrorCode,
   getApiErrorMessage,
   getApiErrorStatus,
-} from "@/lib/api";
+} from "@/lib/apiErrors";
 import type { MfaSetup, MfaSetupVerifyResponse } from "@/types/mfa";
 
 type MfaSetupModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Optional email from the caller (e.g. the login form): used immediately
+  // to fire the setup request without waiting for /me — critical on the login
+  // page where /me is blocked for MFA-less sessions (§8.1).
+  email?: string;
   // 409 MFA_ALREADY_ENABLED — setup finished in another tab (§13): the
   // Security card flips to enabled without a completed verify in this tab.
   onAlreadyEnabled?: () => void;
@@ -45,11 +51,12 @@ type SetupStep = "loading" | "error" | "qr" | "verify" | "success";
 export default function MfaSetupModal({
   open,
   onOpenChange,
+  email: emailProp,
   onAlreadyEnabled,
   onEnabled,
 }: MfaSetupModalProps) {
   const t = useTranslations();
-  const { data: profile, isError: profileError } = useProfile();
+  const { data: profile } = useProfile();
   const setup = useMfaSetup();
 
   const [step, setStep] = useState<SetupStep>("loading");
@@ -105,14 +112,14 @@ export default function MfaSetupModal({
 
           if (status === 403) {
             // ACCESS_DENIED on a protected mutation: the account is likely
-            // locked — show the destructive alert and end the session (§13).
-            setSetupError(getApiErrorMessage(error, t("mfa.setupFailed")));
+            // locked — show the mapped alert and end the session (§13).
+            setSetupError(getApiErrorMessage(error, t, "mfa.setupFailed"));
             setStep("error");
             window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
             return;
           }
 
-          setSetupError(getApiErrorMessage(error, t("mfa.setupFailed")));
+          setSetupError(getApiErrorMessage(error, t, "mfa.setupFailed"));
           setStep("error");
         },
       });
@@ -122,8 +129,10 @@ export default function MfaSetupModal({
 
   // A fresh setup request on every open (Q4 default: new secret per call) —
   // a cancelled flow leaves the account disabled, so there is nothing to
-  // resume. Fires when the profile email arrives while the modal is open,
-  // but never twice per open (e.g. after a profile refetch).
+  // resume. Fires immediately with the best available email: the caller-
+  // provided prop (login email on the login page) wins, then the profile
+  // email, then an empty label (the backend accepts it). Never fires twice
+  // per open (e.g. after a late profile arrival).
   const fetchedForOpenRef = useRef(false);
   useEffect(() => {
     if (!open) {
@@ -131,21 +140,17 @@ export default function MfaSetupModal({
       return;
     }
 
-    // The profile fetch failed before setup could run: surface the error
-    // state instead of leaving the wizard stuck on the loading spinner.
-    if (profileError && !fetchedForOpenRef.current) {
-      setStep("error");
-      setSetupError(t("mfa.setupFailed"));
-      return;
-    }
+    const resolvedEmail = emailProp ?? profile?.email;
 
-    if (profile?.email && !fetchedForOpenRef.current) {
+    // Fire as soon as any email is available — no need to wait for /me
+    // when the caller already knows the login email.
+    if (resolvedEmail !== undefined && !fetchedForOpenRef.current) {
       fetchedForOpenRef.current = true;
-      runSetup(profile.email);
+      runSetup(resolvedEmail);
     }
-    // `runSetup` is stable; the profile email is the only late-arriving input.
+    // `runSetup` is stable; the email sources are the only late-arriving inputs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, profile?.email, profileError, t]);
+  }, [open, emailProp, profile?.email]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -173,7 +178,7 @@ export default function MfaSetupModal({
             </Alert>
             <Button
               type="button"
-              onClick={() => runSetup(profile?.email ?? "")}
+              onClick={() => runSetup(emailProp ?? profile?.email ?? "")}
               className="h-11 w-full"
             >
               {t("mfa.setupRetry")}
