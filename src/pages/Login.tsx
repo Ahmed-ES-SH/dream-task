@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
 
 import MfaEnablePromptDialog from "@/components/mfa/MfaEnablePromptDialog";
@@ -14,7 +14,6 @@ import { toast } from "@/components/ui/toast";
 import LocaleLink from "@/components/website/LocaleLink";
 import { useLoginForm } from "@/hooks/useLoginForm";
 import { useTranslations } from "@/hooks/useTranslations";
-import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/store/auth";
 import type { MfaLoginVerifyResponse } from "@/types/mfa";
 
@@ -34,6 +33,10 @@ export default function Login() {
   // Enable wizard for MFA-less sessions: opened from the inline prompt, which
   // replaces the old redirect to the settings gate.
   const [setupOpen, setSetupOpen] = useState(false);
+  // `MfaSetupModal` reports completion before it reports that the dialog
+  // closed. Keep this synchronous marker so the close callback does not
+  // reopen the MFA-required prompt using the previous `mfaActive` value.
+  const setupCompletedRef = useRef(false);
 
   // Redirect only sessions that were already authenticated when this page
   // loaded (e.g. a logged-in user visiting /login). A fresh sign-in must stay
@@ -76,32 +79,27 @@ export default function Login() {
 
   const handleEnableMfa = () => {
     loginForm.setMfaPromptOpen(false);
+    setupCompletedRef.current = false;
     setSetupOpen(true);
   };
 
   // Closing the wizard without a completed setup (X, Esc, cancel) leaves an
   // MFA-less session: bring the enable prompt back so the user isn't stranded
-  // on the login form while authenticated. On success the store has already
-  // flipped `mfaActive` to true before the close, so the prompt stays shut.
+  // on the login form while authenticated. On success the completion ref is
+  // set before the close callback, so the prompt stays shut.
   const handleSetupOpenChange = (next: boolean) => {
     setSetupOpen(next);
-    if (!next && mfaActive !== true) {
+    if (!next && !setupCompletedRef.current && mfaActive !== true) {
       loginForm.setMfaPromptOpen(true);
     }
   };
 
-  // MFA is active now (or was already active elsewhere): refresh the profile
-  // first so the dashboard sees the fresh status, then land on it.
-  const goToDashboard = async () => {
-    await queryClient.refetchQueries({ queryKey: ["profile"] });
-    navigate(`/${locale ?? "en"}/dashboard`);
-  };
-
   const handleMfaEnabled = () => {
+    setupCompletedRef.current = true;
     setSetupOpen(false);
     updateMfaActive(true);
     toast.success(t("mfa.enabledToast"));
-    void goToDashboard();
+    void loginForm.resendLoginRequest();
   };
 
   return (

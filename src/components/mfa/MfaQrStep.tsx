@@ -14,13 +14,12 @@ type MfaQrStepProps = {
 
 const COPIED_RESET_MS = 2_000;
 
-// Display the secret in readable 4-character groups (XXXX XXXX XXXX XXXX).
-// Only the display is grouped — the raw value is what gets copied (§7.1).
+// Display the secret in readable 4-character groups; only display is grouped, the raw value is copied.
 function groupSecret(secret: string): string {
   return secret.replace(/(.{4})/g, "$1 ").trim();
 }
 
-// QR + manual-entry secret step of the enable wizard (spec §8.1, §10.2).
+// QR + manual-entry secret step of the enable wizard.
 export default function MfaQrStep({ setup, onContinue }: MfaQrStepProps) {
   const t = useTranslations();
   const [copied, setCopied] = useState(false);
@@ -35,8 +34,7 @@ export default function MfaQrStep({ setup, onContinue }: MfaQrStepProps) {
     };
   }, []);
 
-  // Prefer the data URI; fall back to building one from the PNG base64 when
-  // only that is present (§16 #15). Neither → secret-only step with a warning.
+  // Prefer the data URI; fall back to building one from the PNG base64.
   const qrSrc =
     setup.qrcodeDataUri ||
     (setup.qrcodePngBase64
@@ -53,8 +51,7 @@ export default function MfaQrStep({ setup, onContinue }: MfaQrStepProps) {
         setCopied(false);
       }, COPIED_RESET_MS);
     } catch {
-      // Clipboard unavailable (permissions / insecure context): leave the
-      // button idle — the secret stays selectable in the read-only input.
+      // Clipboard unavailable: leave the button idle — the secret stays selectable.
     }
   };
 

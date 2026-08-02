@@ -16,10 +16,7 @@ const badgeVariantByStatus: Record<
   unknown: "secondary",
 };
 
-// Status pill for the Security card (spec §8.1): green "Enabled" for
-// `enabled`, gray "Disabled" for `disabled`, gray "Unknown" for `unknown`.
-// The card only mounts this badge when the profile exposes MFA fields, so the
-// `unknown` variant is a defensive fallback, never a fabricated status (§6.2).
+// Status pill for the Security card; the `unknown` variant is a defensive fallback.
 export default function MfaStatusBadge({ status }: MfaStatusBadgeProps) {
   const t = useTranslations();
 

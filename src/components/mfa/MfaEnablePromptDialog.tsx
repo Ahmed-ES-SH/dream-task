@@ -10,17 +10,13 @@ import { useTranslations } from "@/hooks/useTranslations";
 
 type MfaEnablePromptDialogProps = {
   open: boolean;
-  // The user refused to enable MFA (Not now, X, Esc, outside click): the
-  // settings page ends the session and returns the user to the login page.
+  // Any dismissal (Not now, X, Esc, outside click) refuses MFA: end the session.
   onRefuse: () => void;
   // Open the enable wizard (MfaSetupModal) instead.
   onEnable: () => void;
 };
 
-// Post-login gate prompt (UX: "enable your MFA to access the panel"). Shown
-// on the settings page whenever the session's MFA is inactive. Every
-// dismissal path counts as a refusal — there is no "stay here" option
-// because the dashboard is unreachable without MFA anyway.
+// Post-login gate: every dismissal counts as a refusal — no "stay here" option.
 export default function MfaEnablePromptDialog({
   open,
   onRefuse,

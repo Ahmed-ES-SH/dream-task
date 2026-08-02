@@ -29,25 +29,18 @@ import type { MfaSetup, MfaSetupVerifyResponse } from "@/types/mfa";
 type MfaSetupModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Optional email from the caller (e.g. the login form): used immediately
-  // to fire the setup request without waiting for /me — critical on the login
-  // page where /me is blocked for MFA-less sessions (§8.1).
+  // Optional email from the caller: fires the setup request without waiting for /me.
   email?: string;
-  // 409 MFA_ALREADY_ENABLED — setup finished in another tab (§13): the
-  // Security card flips to enabled without a completed verify in this tab.
+  // 409 MFA_ALREADY_ENABLED — setup finished in another tab.
   onAlreadyEnabled?: () => void;
-  // Verify succeeded and the user finished the wizard (Done, X, or Esc):
-  // the Security card flips to enabled and invalidates `["profile"]` (§8.1).
+  // Verify succeeded and the user finished the wizard.
   onEnabled?: (verifiedAt?: string) => void;
 };
 
-// Enable-wizard steps (spec §4.3).
+// Enable-wizard steps.
 type SetupStep = "loading" | "error" | "qr" | "verify" | "success";
 
-// Wizard shell for the enable flow (spec §7.1, §4.3): fetches a fresh TOTP
-// setup on open, then walks loading → qr → verify → success. Closing at any
-// step cancels silently — no extra API call, the account stays disabled
-// (§16 #1/#2). Base-ui owns focus trap, Esc, and focus return.
+// Wizard shell: loading → qr → verify → success; closing early cancels silently.
 export default function MfaSetupModal({
   open,
   onOpenChange,
@@ -64,10 +57,7 @@ export default function MfaSetupModal({
   const [setupError, setSetupError] = useState<string | null>(null);
   const [verifiedAt, setVerifiedAt] = useState<string | undefined>(undefined);
 
-  // Closing from the success step still means "enabled" server-side, so
-  // `onEnabled` fires on any close (Done, X, or Esc) — the card flips and
-  // the profile refetches (§8.1). Every other step cancels silently (§16
-  // #1/#2) because the enable never completed.
+  // Closing from success still means "enabled" server-side, so onEnabled fires on any close.
   const handleOpenChange = (next: boolean) => {
     if (!next && step === "success") {
       onEnabled?.(verifiedAt);
@@ -75,8 +65,7 @@ export default function MfaSetupModal({
     onOpenChange(next);
   };
 
-  // Guards the async callbacks: a response arriving after the modal closed
-  // must not toast or touch wizard state (silent cancel, §16 #1/#2).
+  // Guards async callbacks: responses after the modal closed must not touch wizard state.
   const openRef = useRef(open);
   useEffect(() => {
     openRef.current = open;
@@ -97,8 +86,7 @@ export default function MfaSetupModal({
         onError: (error) => {
           if (!openRef.current) return;
 
-          // Finished in another tab: close, toast, flip the card (§13). The
-          // status check is a fallback for backends that omit the error code.
+          // Finished in another tab: close, toast, flip the card.
           const status = getApiErrorStatus(error);
           const isAlreadyEnabled =
             getApiErrorCode(error) === "MFA_ALREADY_ENABLED" || status === 409;
@@ -111,8 +99,7 @@ export default function MfaSetupModal({
           }
 
           if (status === 403) {
-            // ACCESS_DENIED on a protected mutation: the account is likely
-            // locked — show the mapped alert and end the session (§13).
+            // ACCESS_DENIED: account likely locked — show the alert and end the session.
             setSetupError(getApiErrorMessage(error, t, "mfa.setupFailed"));
             setStep("error");
             window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
@@ -127,12 +114,7 @@ export default function MfaSetupModal({
     [setup, t, onAlreadyEnabled, onOpenChange],
   );
 
-  // A fresh setup request on every open (Q4 default: new secret per call) —
-  // a cancelled flow leaves the account disabled, so there is nothing to
-  // resume. Fires immediately with the best available email: the caller-
-  // provided prop (login email on the login page) wins, then the profile
-  // email, then an empty label (the backend accepts it). Never fires twice
-  // per open (e.g. after a late profile arrival).
+  // Fresh setup request on every open, using the best available email.
   const fetchedForOpenRef = useRef(false);
   useEffect(() => {
     if (!open) {
@@ -142,8 +124,7 @@ export default function MfaSetupModal({
 
     const resolvedEmail = emailProp ?? profile?.email;
 
-    // Fire as soon as any email is available — no need to wait for /me
-    // when the caller already knows the login email.
+    // Fire as soon as any email is available.
     if (resolvedEmail !== undefined && !fetchedForOpenRef.current) {
       fetchedForOpenRef.current = true;
       runSetup(resolvedEmail);
@@ -194,10 +175,7 @@ export default function MfaSetupModal({
           <MfaVerifyStep
             context="setup"
             onSuccess={(result) => {
-              // `context` is statically "setup", so the shared step always
-              // emits an MfaSetupVerifyResponse here (spec §10.3). The server
-              // only returns 200 with `enabled: true`; anything else leaves
-              // the wizard on the verify step (§4.3).
+              // Context is "setup", so the result is an MfaSetupVerifyResponse; only enabled proceeds.
               const setupResult = result as MfaSetupVerifyResponse;
               if (setupResult.enabled === true) {
                 setVerifiedAt(setupResult.verifiedAt);
@@ -212,9 +190,8 @@ export default function MfaSetupModal({
         {step === "success" && (
           <MfaSuccessStep
             verifiedAt={verifiedAt}
-            // Just close — handleOpenChange fires `onEnabled` for the
-            // success step, so Done and X/Esc behave identically.
-            onDone={() => onOpenChange(false)}
+            // Close through the modal handler so onEnabled fires for Done like it does for X/Esc.
+            onDone={() => handleOpenChange(false)}
           />
         )}
       </DialogPopup>

@@ -14,8 +14,7 @@ type OtpInputProps = {
   onSubmitComplete?: () => void;
 };
 
-// Segmented 6-digit TOTP input (spec §12.2): auto-advance, arrow/Backspace
-// navigation, sanitized paste, auto-submit at 6 digits, and clear-on-error.
+// Segmented 6-digit TOTP input: auto-advance, arrow/Backspace navigation, sanitized paste, auto-submit.
 export default function OtpInput({
   value,
   onChange,
@@ -46,7 +45,7 @@ export default function OtpInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // On error (transition to true): clear all cells and refocus cell 0 (§12.2).
+  // On error transition: clear all cells and refocus cell 0.
   useEffect(() => {
     if (error && !wasErrorRef.current) {
       onChange("");
@@ -142,8 +141,7 @@ export default function OtpInput({
     }
   };
 
-  // Container-level paste: strip non-digits, take the first 6, distribute,
-  // focus the last cell, and auto-submit when complete (§12.2).
+  // Container-level paste: sanitize, distribute, focus the last cell, auto-submit when complete.
   const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
     if (disabled) return;
 

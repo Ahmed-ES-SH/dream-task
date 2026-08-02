@@ -35,17 +35,11 @@ import {
 type MfaDisableModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Disable finished (200) or already disabled elsewhere (404): the Security
-  // card flips to disabled and invalidates `["profile"]` (§8.1, §13).
+  // Disable finished or already disabled elsewhere: flip the card and invalidate profile.
   onDisabled?: () => void;
 };
 
-// Confirmation dialog for disabling MFA (spec §7.2, §12.1): the current
-// password + a TOTP code confirm `POST /v1/auth/mfa/disable`. Error mapping
-// per status code (§13): 401 → inline error on the password (OTP cleared,
-// dialog stays open); 422 → inline error on the code (only the OTP clears,
-// the password is preserved — §16 #11); 404 → "already disabled" toast,
-// close, `onDisabled`; 429 → rate-limit alert honoring `Retry-After` (§12.3).
+// Confirmation dialog: password + TOTP confirm disable; errors map per status code.
 export default function MfaDisableModal({
   open,
   onOpenChange,
@@ -55,8 +49,9 @@ export default function MfaDisableModal({
   const disable = useMfaDisable();
 
   const [showPassword, setShowPassword] = useState(false);
-  // Alert shown in the dialog's status region: the 429 rate-limit message
-  // (with Retry-After) or a 403 ACCESS_DENIED message (§13).
+  // Local submitting flag: mutation status updates after callbacks, leaving stale pending.
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Alert in the status region: the 429 rate-limit or 403 ACCESS_DENIED message.
   const [requestError, setRequestError] = useState<string | null>(null);
   const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
   const retryTimerRef = useRef<number | null>(null);
@@ -66,16 +61,17 @@ export default function MfaDisableModal({
   const form = useForm<DisableMfaFormValues>({
     resolver: zodResolver(schema),
     defaultValues: { password: "", code: "" },
+    // Keep partial OTP input from re-running the async resolver after a server error.
+    reValidateMode: "onSubmit",
   });
 
-  // Guards the async callbacks: a response arriving after the modal closed
-  // must not toast or touch the form (silent cancel, §16 #1/#2).
+  // Guards async callbacks: responses after close must not touch the form.
   const openRef = useRef(open);
   useEffect(() => {
     openRef.current = open;
   }, [open]);
 
-  // Clear the single rate-limit cooldown timer on unmount (no ticker, §12.3).
+  // Clear the single rate-limit cooldown timer on unmount.
   useEffect(() => {
     return () => {
       if (retryTimerRef.current !== null) {
@@ -84,33 +80,30 @@ export default function MfaDisableModal({
     };
   }, []);
 
-  // Closing resets the form — cleared fields and errors, no stale cooldown —
-  // so every open starts fresh (success/404 closes route through here too).
-  // Runs in an event handler, not an effect (§7.2).
+  // Closing resets the form so every open starts fresh.
   const handleOpenChange = (next: boolean) => {
     onOpenChange(next);
     if (!next) {
       form.reset();
       setRequestError(null);
       setRetryAfterSeconds(0);
+      setIsSubmitting(false);
     }
   };
 
-  const isDisabling = disable.isPending;
+  const isDisabling = isSubmitting;
   const isRateLimited = retryAfterSeconds > 0;
 
-  // Keep the submit button disabled until both fields are filled (auto-submit
-  // at 6 digits may fire before the button is even reachable). `useWatch`
-  // instead of `form.watch` — React Compiler-safe (§compiler).
+  // Keep the submit button disabled until both fields are filled.
   const passwordValue = useWatch({ control: form.control, name: "password" });
   const codeValue = useWatch({ control: form.control, name: "code" });
 
   const onValid = (values: DisableMfaFormValues) => {
-    // OtpInput auto-submits at 6 digits — guard the rate-limit window here
-    // too, not just on the button (§12.3, §16 #10).
+    // Guard the rate-limit window on auto-submit too.
     if (isDisabling || isRateLimited) return;
 
     setRequestError(null);
+    setIsSubmitting(true);
 
     disable.mutate(values, {
       onSuccess: () => {
@@ -125,8 +118,7 @@ export default function MfaDisableModal({
         const code = getApiErrorCode(error);
 
         if (status === 401 && code !== "MFA_CODE_INVALID") {
-          // Wrong password (§13): inline error on the password field, the OTP
-          // clears, focus returns to the password, the dialog stays open.
+          // Wrong password: inline error on the password; OTP clears, focus returns.
           form.setError("password", {
             message: t("mfa.passwordInvalid"),
           });
@@ -136,10 +128,7 @@ export default function MfaDisableModal({
         }
 
         if (status === 401 || status === 422) {
-          // Invalid code (401 MFA_CODE_INVALID) or invalid/expired code (422,
-          // §13): inline error on the code field; OtpInput clears the cells
-          // and refocuses cell 0 on the error transition (§12.2). The
-          // password is never touched (§16 #11).
+          // Invalid/expired code: inline error on the code; the password is untouched.
           form.setError("code", {
             message: getApiErrorMessage(error, t, "mfa.codeInvalid"),
           });
@@ -147,7 +136,7 @@ export default function MfaDisableModal({
         }
 
         if (code === "MFA_NOT_ENABLED" || status === 404) {
-          // Disabled in another tab (§13): toast, close, flip the card.
+          // Disabled in another tab: toast, close, flip the card.
           toast(t("mfa.alreadyDisabled"));
           handleOpenChange(false);
           onDisabled?.();
@@ -155,16 +144,14 @@ export default function MfaDisableModal({
         }
 
         if (status === 403) {
-          // ACCESS_DENIED on a protected mutation: the account is likely
-          // locked — surface the mapped message and end the session (§13).
+          // ACCESS_DENIED: account likely locked — surface the message and end the session.
           setRequestError(getApiErrorMessage(error, t, "mfa.accessDenied"));
           window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
           return;
         }
 
         if (status === 429) {
-          // Rate limited: show the mapped message, and honor Retry-After
-          // by disabling the submit button until the window elapses (§12.3).
+          // Rate limited: honor Retry-After by disabling submit until it elapses.
           setRequestError(getApiErrorMessage(error, t, "mfa.rateLimited"));
 
           const seconds = getRetryAfterSeconds(error);
@@ -178,18 +165,19 @@ export default function MfaDisableModal({
           return;
         }
 
-        // Unexpected failure: surface it on the code field like the shared
-        // verify step's generic branch.
+        // Unexpected failure: surface it on the code field.
         form.setError("code", {
           message: getApiErrorMessage(error, t, "mfa.codeInvalid"),
         });
       },
+      onSettled: () => {
+        // Re-enable the form for every completed request, including errors.
+        setIsSubmitting(false);
+      },
     });
   };
 
-  // Runs the RHF submit pipeline from event handlers only (form submit and
-  // OtpInput auto-submit) — never during render, so no ref reads at render
-  // time. Shared by both entry points so the validation path stays identical.
+  // Run the RHF submit pipeline from event handlers only.
   const handleSubmit = () => {
     void form.handleSubmit(onValid)();
   };
@@ -255,10 +243,7 @@ export default function MfaDisableModal({
                   value={field.value}
                   onChange={(value) => {
                     field.onChange(value);
-                    // Dismiss the inline code error as soon as the user
-                    // retypes — but not on OtpInput's own error-transition
-                    // clear (""), so the message survives until the retype
-                    // or the next submit (§12.2).
+                    // Dismiss the inline code error on retype, but not on the error-transition clear.
                     if (value !== "") form.clearErrors("code");
                   }}
                   error={fieldState.error !== undefined}

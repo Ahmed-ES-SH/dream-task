@@ -10,9 +10,7 @@ type MfaSuccessStepProps = {
   onDone: () => void;
 };
 
-// Static confirmation of the enable flow (spec §7.1, §8.1): check icon,
-// title, optional verification timestamp, and a single "Done" action that
-// closes the wizard and flips the Security card. No animation (§14).
+// Static confirmation of the enable flow: check icon, timestamp, Done action.
 export default function MfaSuccessStep({
   verifiedAt,
   onDone,
