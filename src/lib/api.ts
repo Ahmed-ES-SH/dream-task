@@ -75,6 +75,9 @@ function isAuthPage(): boolean {
   return /(login|register)(\/|$)/.test(window.location.pathname);
 }
 
+// axios' config type has no slot for our retry marker, so extend it locally.
+type RetryableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
 // ---- Single-flight token refresh --------------------------------------
 // Only one refresh request runs at a time; concurrent 401s are queued and all
 // resolved with the single new token once it arrives.
@@ -139,6 +142,13 @@ function queueRefresh(): Promise<string | null> {
       refreshQueue.forEach((resolve) => resolve(token));
       refreshQueue = [];
       return token;
+    })
+    .catch((error) => {
+      // The refresh call itself failed: unblock every queued 401 handler with
+      // `null` so their requests fail fast instead of hanging forever.
+      refreshQueue.forEach((resolve) => resolve(null));
+      refreshQueue = [];
+      throw error;
     });
 }
 
@@ -165,6 +175,15 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // The original request was already retried once with a fresh token. A
+    // second 401 means refreshing again can't salvage the session (e.g. a
+    // disabled account), so bail out instead of looping forever.
+    if ((config as RetryableConfig)._retried) {
+      clearAuthTokens();
+      window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+      return Promise.reject(error);
+    }
+
     try {
       const newToken = await queueRefresh();
 
@@ -175,7 +194,8 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // Retry the original request with the fresh token.
+      // Retry the original request with the fresh token — exactly once.
+      (config as RetryableConfig)._retried = true;
       config.headers.Authorization = `Bearer ${newToken}`;
       return apiClient(config);
     } catch (refreshError) {
