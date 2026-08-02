@@ -1,4 +1,4 @@
-import { LogOutIcon } from "lucide-react";
+import { LogOutIcon, SettingsIcon } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import LocaleLink from "@/components/website/LocaleLink";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslations } from "@/hooks/useTranslations";
 import { getInitials } from "@/lib/format";
@@ -93,6 +94,11 @@ export default function UserMenu({ variant = "full" }: UserMenuProps) {
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
+
+        <DropdownMenuItem render={<LocaleLink to="/dashboard/settings" />}>
+          <SettingsIcon />
+          {t("settings.title")}
+        </DropdownMenuItem>
 
         <DropdownMenuItem variant="destructive" onClick={handleLogout}>
           <LogOutIcon />

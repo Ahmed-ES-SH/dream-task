@@ -42,6 +42,11 @@
     "title": "داشبورد",
     "description": "خوش برگشتی — نمای کلی حساب شما."
   },
+  "settings": {
+    "title": "تنظیمات",
+    "securityTitle": "امنیت",
+    "securityDescription": "تنظیمات امنیت"
+  },
   "login": {
     "title": "خوش برگشتی",
     "description": "برای ادامه به حساب خود وارد شوید.",

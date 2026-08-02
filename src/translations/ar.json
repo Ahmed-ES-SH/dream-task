@@ -42,6 +42,11 @@
     "title": "لوحة التحكم",
     "description": "مرحباً بعودتك — إليك نظرة عامة على حسابك."
   },
+  "settings": {
+    "title": "الإعدادات",
+    "securityTitle": "الأمان",
+    "securityDescription": "إعدادات الأمان"
+  },
   "login": {
     "title": "مرحباً بعودتك",
     "description": "سجّل الدخول إلى حسابك للمتابعة.",
