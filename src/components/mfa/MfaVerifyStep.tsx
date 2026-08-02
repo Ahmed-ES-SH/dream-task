@@ -24,14 +24,11 @@ type MfaVerifyStepProps = {
   mfaToken?: string;
   onSuccess: (result: MfaSetupVerifyResponse | MfaLoginVerifyResponse) => void;
   onBack?: () => void;
-  // Login context only: a 401 means the mfa_token expired — the challenge is
-  // over and the caller should return to the credentials step (§11.5, §13).
+  // Login only: a 401 means the mfa_token expired — return to the credentials step.
   onChallengeExpired?: () => void;
 };
 
-// Shared code-entry + submit step used by the login challenge (Phase 6) and
-// the enable wizard (Phase 10). Context-agnostic: `mfa_token` is only sent
-// for the login context (spec §10.3, §8.1).
+// Shared code-entry + submit step for the login challenge and the enable wizard.
 export default function MfaVerifyStep({
   context,
   mfaToken,
@@ -42,20 +39,16 @@ export default function MfaVerifyStep({
   const t = useTranslations();
   const verify = useMfaVerify();
   const [code, setCode] = useState("");
-  // The translation key of the current error (not its text): it is translated
-  // at render time so it stays in sync when the user switches language.
+  // Error translation key (not text) so it re-renders with the active language.
   const [verificationErrorKey, setVerificationErrorKey] =
     useState<StringKey | null>(null);
   const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
   const retryTimerRef = useRef<number | null>(null);
 
-  // Mirror of `code` for the auto-submit path: OtpInput fires
-  // `onSubmitComplete` synchronously after `onChange`, before React state has
-  // settled, so the submit handler reads the ref (updated synchronously)
-  // instead of a stale state value.
+  // Mirror of `code` for the auto-submit path, where state may still be stale.
   const codeRef = useRef("");
 
-  // Clear the single cooldown timer on unmount (no ticker, spec §12.3).
+  // Clear the single cooldown timer on unmount.
   useEffect(() => {
     return () => {
       if (retryTimerRef.current !== null) {
@@ -103,18 +96,13 @@ export default function MfaVerifyStep({
           const code = getApiErrorCode(error);
 
           if (status === 401 && context === "login" && code !== "MFA_CODE_INVALID") {
-            // Challenge expired — not a session problem. Alert via the caller
-            // (which returns to the credentials step); the interceptor already
-            // skips the refresh flow for login-context verify (§11.5).
-            // MFA_CODE_INVALID is excluded: a wrong code is a user error with
-            // its own message, not an expired challenge.
+            // Challenge expired (MFA_CODE_INVALID is a user error, not an expiry).
             onChallengeExpired?.();
             return;
           }
 
           if (status === 429) {
-            // Rate limited: show the mapped message, and honor Retry-After
-            // by disabling the submit button until the window elapses (§12.3).
+            // Rate limited: honor Retry-After by disabling submit until it elapses.
             setVerificationErrorKey(getApiErrorKey(error, "mfa.rateLimited"));
 
             const seconds = getRetryAfterSeconds(error);
@@ -129,8 +117,7 @@ export default function MfaVerifyStep({
           }
 
           if (status === 422) {
-            // Invalid/expired code: show the mapped message; OtpInput clears
-            // the cells and refocuses cell 0 on the error transition (§12.2).
+            // Invalid/expired code: OtpInput clears and refocuses on the error transition.
             setVerificationErrorKey(getApiErrorKey(error, "mfa.codeExpired"));
             return;
           }

@@ -33,37 +33,55 @@ export function useLoginForm() {
     defaultValues: { email: "", password: "" },
   });
 
+  const submitLogin = useCallback(
+    async (values: LoginFormValues, redirectOnSuccess: boolean) => {
+      setApiErrorKey(null);
+
+      try {
+        const result = await login(values);
+
+        if (result.status === "mfa_required") {
+          setMfaToken(result.mfaToken);
+          setLoginEmail(values.email);
+          setStep("mfa");
+          return;
+        }
+
+        // The dashboard fetches the current user via /me, which only works for
+        // sessions with a verified MFA setup. When the login response reports
+        // MFA as inactive, keep the user on the login page and open the enable
+        // prompt there instead of redirecting.
+        const mfaActive = getMfaStatus(result.user);
+
+        if (mfaActive === false) {
+          // Keep MFA-less users on the login page and open the enable prompt
+          // there (§ UX: "enable MFA or you can't use the panel").
+          setMfaPromptOpen(true);
+          return;
+        }
+
+        if (redirectOnSuccess) {
+          navigate(`/${locale ?? "en"}/dashboard`);
+        }
+      } catch (error) {
+        setApiErrorKey(getApiErrorKey(error, "login.failed"));
+      }
+    },
+    [locale, login, navigate],
+  );
+
   const onSubmit = form.handleSubmit(async (values) => {
-    setApiErrorKey(null);
-
-    try {
-      const result = await login(values);
-
-      if (result.status === "mfa_required") {
-        setMfaToken(result.mfaToken);
-        setLoginEmail(values.email);
-        setStep("mfa");
-        return;
-      }
-
-      // The dashboard fetches the current user via /me, which only works for
-      // sessions with a verified MFA setup. When the login response reports
-      // MFA as inactive, keep the user on the login page and open the enable
-      // prompt there instead of redirecting.
-      const mfaActive = getMfaStatus(result.user);
-
-      if (mfaActive === false) {
-        // Keep MFA-less users on the login page and open the enable prompt
-        // there (§ UX: "enable MFA or you can't use the panel").
-        setMfaPromptOpen(true);
-        return;
-      }
-
-      navigate(`/${locale ?? "en"}/dashboard`);
-    } catch (error) {
-      setApiErrorKey(getApiErrorKey(error, "login.failed"));
-    }
+    await submitLogin(values, true);
   });
+
+  // Re-submit the credentials after MFA setup completes without redirecting.
+  // The server may return a fresh MFA challenge now that MFA is enabled.
+  const resendLoginRequest = useCallback(async () => {
+    const isValid = await form.trigger();
+    if (!isValid) return;
+
+    await submitLogin(form.getValues(), false);
+  }, [form, submitLogin]);
 
   const resetToCredentials = useCallback(() => {
     setMfaToken(null);
@@ -90,6 +108,7 @@ export function useLoginForm() {
     togglePassword: () => setShowPassword((prev) => !prev),
     resetToCredentials,
     handleChallengeExpired,
+    resendLoginRequest,
     onSubmit,
   };
 }

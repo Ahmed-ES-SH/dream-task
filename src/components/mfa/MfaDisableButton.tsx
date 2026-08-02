@@ -6,9 +6,7 @@ type MfaDisableButtonProps = {
   onClick: () => void;
 };
 
-// "Disable MFA" action (spec §8.1): destructive variant, opens
-// `MfaDisableModal` in Phase 11 — the click bubbles up so `MfaSecurityCard`
-// can flip its `disableOpen` flag.
+// "Disable MFA" action: the click bubbles up so MfaSecurityCard flips its disable flag.
 export default function MfaDisableButton({
   disabled,
   onClick,
