@@ -23,7 +23,20 @@
     "copyright": "© 2026 Dream"
   },
   "home": {
-    "title": "Home"
+    "title": "Home",
+    "eyebrow": "Career platform",
+    "headline": "Find work worth dreaming about.",
+    "description": "Browse roles from companies hiring now, apply in minutes, and make your next career move.",
+    "ctaStart": "Get started",
+    "ctaSignIn": "Sign in",
+    "roles": {
+      "engineering": "Engineering",
+      "design": "Design",
+      "data": "Data",
+      "product": "Product",
+      "marketing": "Marketing",
+      "support": "Support"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
