@@ -11,6 +11,7 @@ import {
 import {
   AUTH_UNAUTHORIZED_EVENT,
   clearAuthTokens,
+  finalizeLoginWithMfa,
   getAccessToken,
   loginRequest,
   logoutRequest,
@@ -19,10 +20,16 @@ import {
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import type { LoginRequest } from "@/types/auth";
+import type { MfaLoginVerifyResponse } from "@/types/mfa";
+
+export type LoginResult =
+  | { status: "authenticated" }
+  | { status: "mfa_required"; mfaToken: string };
 
 type AuthContextValue = {
   isAuthenticated: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<LoginResult>;
+  completeLoginWithMfa: (result: MfaLoginVerifyResponse) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -33,16 +40,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     Boolean(getAccessToken()),
   );
 
-  const login = useCallback(async (credentials: LoginRequest) => {
+  const login = useCallback(async (credentials: LoginRequest): Promise<LoginResult> => {
     const response = await loginRequest(credentials);
-    setAccessToken(response.accessToken);
+
+    if (response.mfaRequired) {
+      if (!response.mfaToken) {
+        throw new Error("MFA challenge missing token");
+      }
+
+      return { status: "mfa_required", mfaToken: response.mfaToken };
+    }
+
+    if (response.accessToken) {
+      setAccessToken(response.accessToken);
+    }
 
     if (response.refreshToken) {
       setRefreshToken(response.refreshToken);
     }
 
     setIsAuthenticated(true);
+
+    return { status: "authenticated" };
   }, []);
+
+  const completeLoginWithMfa = useCallback(
+    async (result: MfaLoginVerifyResponse) => {
+      // §11.5 handshake: store the returned tokens and, when the access token
+      // is absent, mint one via the refresh path.
+      await finalizeLoginWithMfa(result);
+      setIsAuthenticated(true);
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -69,8 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ isAuthenticated, login, logout }),
-    [isAuthenticated, login, logout],
+    () => ({ isAuthenticated, login, completeLoginWithMfa, logout }),
+    [isAuthenticated, login, completeLoginWithMfa, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

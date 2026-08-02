@@ -9,6 +9,11 @@ export type User = {
   avatarUrl?: string;
   createdAt: string;
   lastLoginAt: string | null;
+  mfa?: {
+    enabled?: boolean;
+    verifiedAt?: string;
+    methods?: string[];
+  };
 };
 
 export function normalizeUser(raw: unknown): User {
@@ -17,6 +22,22 @@ export function normalizeUser(raw: unknown): User {
   const lastLoginAt =
     pickString(obj, ["lastLoginAt", "last_login_at", "lastLogin", "last_login"]) ??
     null;
+
+  const rawMfa = obj.mfa;
+  const mfa =
+    typeof rawMfa === "object" && rawMfa !== null
+      ? {
+          enabled: typeof (rawMfa as Payload).enabled === "boolean"
+            ? (rawMfa as Payload).enabled === true
+            : undefined,
+          verifiedAt: pickString(rawMfa as Payload, ["verifiedAt", "verified_at"]),
+          methods: Array.isArray((rawMfa as Payload).methods)
+            ? ((rawMfa as Payload).methods as unknown[]).filter(
+                (item): item is string => typeof item === "string",
+              )
+            : undefined,
+        }
+      : undefined;
 
   return {
     id: pickString(obj, ["id", "_id", "userId", "user_id"]) ?? "",
@@ -39,5 +60,6 @@ export function normalizeUser(raw: unknown): User {
       pickString(obj, ["createdAt", "created_at", "dateCreated", "registeredAt"]) ??
       "",
     lastLoginAt,
+    mfa,
   };
 }
